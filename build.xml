@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="jitsi-lgpl-dependencies">
+
+  <property file="local.properties" />
+  <property name="dest" value="classes" />
+  <property name="dest.test" value="test-classes" />
+  <property name="dist" value="dist" />
+  <property name="JUnit.home" value="lib/test"/>
+  <property name="junit.reports" value="junit-reports"/>
+  <property name="jitsi-lgpl-dependencies.jar" value="jitsi-lgpl-dependencies.jar"/>
+  <property name="src" value="src"/>
+  <property name="src.test" value="test"/>
+  <property name="doc" value="doc"/>
+  <property name="java.doc" value="${doc}/api"/>
+  <property name="native.libs" value="lib/native"/>
+  <property environment="system"/>
+     
+  <path id="compile.class.path">
+    <fileset dir="lib" includes="*.jar" />
+  </path>
+  <path id="test.class.path">
+    <path refid="compile.class.path" />
+    <pathelement location="${dest}" />
+    <pathelement location="${dest.test}" />
+    <pathelement location="${JUnit.home}/junit-4.11.jar"/>
+    <pathelement location="${JUnit.home}/hamcrest-core-1.3.jar"/>
+  </path>
+
+  <condition property="build.label"
+             value="${label}"
+             else="">
+    <isset property="label"/>
+  </condition>
+
+  <!-- Import JNI build xml -->
+  <import file="${src}/native/build.xml"/>
+
+  <target
+      name="clean"
+      depends="clean-native"
+      description="Remove all compiled/generated files and prepare for a clean compile/build.">
+    <delete failonerror="false" includeemptydirs="true">
+      <fileset file="${jitsi-lgpl-dependencies.jar}" />
+      <fileset dir="${dest}" />
+      <fileset dir="${dest.test}" />
+      <fileset dir="${dist}" />
+      <fileset dir="${doc}" />
+      <fileset dir="${junit.reports}"/>
+    </delete>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="${dest}" />
+    <javac
+        classpathref="compile.class.path"
+        debug="true"
+        destdir="${dest}"
+        fork="true"
+        optimize="true"
+        source="1.6"
+        target="1.6">
+      <src path="${src}"/>
+    </javac>
+  </target>
+  <target name="compile-test" depends="compile">
+      <mkdir dir="${dest.test}" />
+      <javac
+            classpathref="test.class.path"
+            debug="true"
+            destdir="${dest.test}"
+            fork="true"
+            optimize="true"
+            source="1.6"
+            target="1.6">
+          <src path="${src.test}"/>
+      </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+    <jar
+        compress="true"
+        destfile="${jitsi-lgpl-dependencies.jar}">
+      <fileset casesensitive="no" dir="${dest}">
+        <include name="**/*.class" />
+        <include name="**/*.properties" />
+        <exclude name="${dest}/jitsi-lgpl-dependencies.jar" />
+      </fileset>
+    </jar>    
+  </target>
+
+  <target
+      name="make"
+      depends="compile,jar"
+      description="Incrementally compile and jar/package the project." />
+
+  <target
+      name="rebuild"
+      depends="clean,make"
+      description="Clean and make the project." />
+
+  <!-- JAVADOC -->
+  <target name="javadoc"
+      description="Generates project javadoc.">
+      <javadoc author="true" destdir="${java.doc}" package="true"
+          version="true" use="true" windowtitle="Jitsi API"
+          classpathref="compile.class.path" source="1.6+" maxmemory="256m">
+          <packageset dir="${src}">
+              <include name="**"/>
+          </packageset>
+          <tag name="todo" description="To do:"/>
+          <tag name="note" description="Note:"/>
+          <link href="${j2se_api}" />
+          <header>
+              <![CDATA[
+              <b> Jitsi: the OpenSource Java VoIP and Instant Messaging client. </b>
+              ]]>
+          </header>
+          <bottom>
+              <![CDATA[
+              <font size="-1">
+                  <a href="http://jitsi.org"> Jitsi, the OpenSource Java VoIP and Instant Messaging client. </a>
+                  <br>
+                      <a href="http://gnu.org"> Distributable under LGPL license. </a>
+                  <br>
+              </font>
+              ]]>
+          </bottom>
+      </javadoc>
+  </target>
+
+  <!-- build all binaries and the jitsi-lgpl-dependencies.jar -->
+  <target name="dist" depends="make">
+      <zip destfile="${dist}/windows/jitsi-lgpl-dependencies-${build.label}-x86.zip">
+          <zipfileset file="jitsi-lgpl-dependencies.jar" />
+          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
+          <zipfileset dir="lib/native/windows" includes="*.dll"
+                      prefix="lib/native/windows"/>
+      </zip>
+      <zip destfile="${dist}/windows/jitsi-lgpl-dependencies-${build.label}-x64.zip">
+          <zipfileset file="jitsi-lgpl-dependencies.jar" />
+          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
+          <zipfileset dir="lib/native/windows-64" includes="*.dll"
+                      prefix="lib/native/windows-64"/>
+      </zip>
+      <zip destfile="${dist}/macosx/jitsi-lgpl-dependencies-${build.label}.zip">
+          <zipfileset file="jitsi-lgpl-dependencies.jar" />
+          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
+          <zipfileset dir="lib/native/mac" includes="*.jnilib"
+                      prefix="lib/native/mac"/>
+      </zip>
+      <zip destfile="${dist}/linux/jitsi-lgpl-dependencies-${build.label}-i386.zip">
+          <zipfileset file="jitsi-lgpl-dependencies.jar" />
+          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
+          <zipfileset dir="lib/native/linux" includes="*.so"
+                      prefix="lib/native/linux"/>
+      </zip>
+      <zip destfile="${dist}/linux/jitsi-lgpl-dependencies-${build.label}-amd64.zip">
+          <zipfileset file="jitsi-lgpl-dependencies.jar" />
+          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
+          <zipfileset dir="lib/native/linux-64" includes="*.so"
+                      prefix="lib/native/linux-64"/>
+      </zip>
+      <zip destfile="${dist}/src/jitsi-lgpl-dependencies-src-${build.label}.zip">
+        <zipfileset dir="." prefix="jitsi-lgpl-dependencies">
+            <exclude name="classes/"/>
+            <exclude name="dist/"/>
+            <exclude name=".git/"/>
+            <exclude name="jitsi-lgpl-dependencies.jar"/>
+        </zipfileset>
+      </zip>
+  </target>
+  <!-- Run the tests-->
+  <target name="test" depends="compile-test">
+      <mkdir dir="${junit.reports}"/>
+      <junit printsummary="yes" haltonfailure="true" fork="true" forkmode="once">
+        <formatter type="xml" />
+        <classpath refid="test.class.path"/>
+        <sysproperty
+              key="java.library.path"
+              path="lib/native/linux-64:lib/native/linux:lib/native/mac:lib/native/windows-64:lib/native/windows" />
+        <test name="org.jitsi.sctp4j.SctpTestSuite"
+              todir="${junit.reports}"/>
+      </junit>
+  </target>
+
+</project>

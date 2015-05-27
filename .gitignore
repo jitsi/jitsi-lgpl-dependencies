@@ -1,0 +1,7 @@
+/classes
+jitsi-lgpl-dependencies.jar
+.idea
+*.swp
+dist
+*.class
+.settings/*
