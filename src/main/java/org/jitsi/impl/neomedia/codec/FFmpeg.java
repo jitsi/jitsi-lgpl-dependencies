@@ -6,6 +6,8 @@
  */
 package org.jitsi.impl.neomedia.codec;
 
+import org.jitsi.util.*;
+
 /**
  * Provides the interface to the native FFmpeg library.
  *
@@ -223,7 +225,7 @@ public class FFmpeg
 
     static
     {
-        System.loadLibrary("jnffmpeg");
+        JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
 
         av_register_all();
         avcodec_register_all();

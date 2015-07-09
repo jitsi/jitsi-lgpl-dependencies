@@ -1,7 +1,8 @@
 /classes
-jitsi-lgpl-dependencies.jar
-.idea
-*.swp
-dist
+/dist
+/.idea
+/jitsi-lgpl-dependencies.jar
+/.settings/*
+/target
 *.class
-.settings/*
+*.swp

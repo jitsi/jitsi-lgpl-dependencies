@@ -9,10 +9,10 @@
   <property name="junit.reports" value="junit-reports"/>
   <property name="jitsi-lgpl-dependencies.jar" value="jitsi-lgpl-dependencies.jar"/>
   <property name="src" value="src"/>
-  <property name="src.test" value="test"/>
+  <property name="src.test" value="${src}/test"/>
   <property name="doc" value="doc"/>
   <property name="java.doc" value="${doc}/api"/>
-  <property name="native.libs" value="lib/native"/>
+  <property name="native.libs" value="${src}/main/resources"/>
   <property environment="system"/>
      
   <path id="compile.class.path">
@@ -59,7 +59,8 @@
         optimize="true"
         source="1.6"
         target="1.6">
-      <src path="${src}"/>
+      <src path="${src}/main/java" />
+      <src path="${src}/main/resources" />
     </javac>
   </target>
   <target name="compile-test" depends="compile">
@@ -72,7 +73,8 @@
             optimize="true"
             source="1.6"
             target="1.6">
-          <src path="${src.test}"/>
+          <src path="${src.test}/java" />
+          <src path="${src.test}/resources" />
       </javac>
   </target>
 
@@ -83,8 +85,8 @@
       <fileset casesensitive="no" dir="${dest}">
         <include name="**/*.class" />
         <include name="**/*.properties" />
-        <exclude name="${dest}/jitsi-lgpl-dependencies.jar" />
       </fileset>
+      <fileset casesensitive="no" dir="${src}/main/resources" />
     </jar>    
   </target>
 
@@ -133,32 +135,27 @@
       <zip destfile="${dist}/windows/jitsi-lgpl-dependencies-${build.label}-x86.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
           <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/windows" includes="*.dll"
-                      prefix="lib/native/windows"/>
+          <zipfileset dir="lib/native/windows" includes="*.dll" prefix="win32-x86" />
       </zip>
       <zip destfile="${dist}/windows/jitsi-lgpl-dependencies-${build.label}-x64.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
           <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/windows-64" includes="*.dll"
-                      prefix="lib/native/windows-64"/>
+          <zipfileset dir="lib/native/windows-64" includes="*.dll" prefix="win32-x86-64" />
       </zip>
       <zip destfile="${dist}/macosx/jitsi-lgpl-dependencies-${build.label}.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
           <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/mac" includes="*.jnilib"
-                      prefix="lib/native/mac"/>
+          <zipfileset dir="lib/native/mac" includes="*.jnilib" prefix="darwin" />
       </zip>
       <zip destfile="${dist}/linux/jitsi-lgpl-dependencies-${build.label}-i386.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
           <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/linux" includes="*.so"
-                      prefix="lib/native/linux"/>
+          <zipfileset dir="lib/native/linux" includes="*.so" prefix="linux-x86" />
       </zip>
       <zip destfile="${dist}/linux/jitsi-lgpl-dependencies-${build.label}-amd64.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
           <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/linux-64" includes="*.so"
-                      prefix="lib/native/linux-64"/>
+          <zipfileset dir="lib/native/linux-64" includes="*.so" prefix="linux-x86-64" />
       </zip>
       <zip destfile="${dist}/src/jitsi-lgpl-dependencies-src-${build.label}.zip">
         <zipfileset dir="." prefix="jitsi-lgpl-dependencies">
@@ -166,6 +163,7 @@
             <exclude name="dist/"/>
             <exclude name=".git/"/>
             <exclude name="jitsi-lgpl-dependencies.jar"/>
+            <exclude name="target/" />
         </zipfileset>
       </zip>
   </target>
@@ -177,7 +175,7 @@
         <classpath refid="test.class.path"/>
         <sysproperty
               key="java.library.path"
-              path="lib/native/linux-64:lib/native/linux:lib/native/mac:lib/native/windows-64:lib/native/windows" />
+              path="${native.libs}/linux-x86-64:${native.libs}/linux-x86:${native.libs}/darwin:${native.libs}/win32-x86-64:${native.libs}/win32-x86" />
         <test name="org.jitsi.sctp4j.SctpTestSuite"
               todir="${junit.reports}"/>
       </junit>

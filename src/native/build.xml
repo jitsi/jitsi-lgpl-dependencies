@@ -91,46 +91,46 @@
   </condition>
 
   <!-- initialize destination directory -->
-  <condition property="native_install_dir" value="${native.libs}/windows">
+  <condition property="native_install_dir" value="${native.libs}/win32-x86">
     <and>
       <isset property="is.running.windows"/>
       <equals arg1="${arch}" arg2="32" />
     </and>
   </condition>
 
-  <condition property="native_install_dir" value="${native.libs}/windows-64">
+  <condition property="native_install_dir" value="${native.libs}/win32-x86-64">
     <and>
       <isset property="is.running.windows"/>
       <equals arg1="${arch}" arg2="64" />
     </and>
   </condition>
 
-  <condition property="native_install_dir" value="${native.libs}/linux">
+  <condition property="native_install_dir" value="${native.libs}/linux-x86">
     <and>
       <isset property="is.running.linux"/>
       <equals arg1="${arch}" arg2="32" />
     </and>
   </condition>
 
-  <condition property="native_install_dir" value="${native.libs}/linux-64">
+  <condition property="native_install_dir" value="${native.libs}/linux-x86-64">
     <and>
       <isset property="is.running.linux"/>
       <equals arg1="${arch}" arg2="64" />
     </and>
   </condition>
 
-  <condition property="native_install_dir" value="${native.libs}/mac">
+  <condition property="native_install_dir" value="${native.libs}/darwin">
     <isset property="is.running.macos"/>
   </condition>
 
-  <condition property="native_install_dir" value="${native.libs}/freebsd">
+  <condition property="native_install_dir" value="${native.libs}/freebsd-x86">
     <and>
       <isset property="is.running.freebsd"/>
       <equals arg1="${arch}" arg2="32" />
     </and>
   </condition>
 
-  <condition property="native_install_dir" value="${native.libs}/freebsd-64">
+  <condition property="native_install_dir" value="${native.libs}/freebsd-x86-64">
     <and>
       <isset property="is.running.freebsd"/>
       <equals arg1="${arch}" arg2="64" />
@@ -174,6 +174,7 @@
       <compilerarg value="-D_XOPEN_SOURCE=600" />
       <compilerarg value="-fPIC" />
       <compilerarg value="-I${ffmpeg}" />
+      <compilerarg value="-I${basedir}/src/main/include" />
       <compilerarg value="-m${arch}" />
       <compilerarg value="-O2" />
       <compilerarg value="-std=c99" />
@@ -239,7 +240,7 @@
       <linkerarg value="-Wl,--kill-at" if="is.running.windows" />
       <linkerarg value="-static-libgcc" if="is.running.windows" />
 
-      <fileset dir="${src}/native/ffmpeg" includes="*.c"/>
+      <fileset file="${src}/main/c/org/jitsi/impl/neomedia/codec/FFmpeg.c" />
     </cc>
 
     <delete dir="${obj}" failonerror="false" />
@@ -250,10 +251,12 @@
   <target name="g722" description="Build jng722 shared library" depends="init-native">
     <cc outtype="shared" name="gcc" outfile="${native_install_dir}/jng722" objdir="${obj}">
       <!-- common compiler flags -->
+      <compilerarg value="-D_JNI_IMPLEMENTATION_" />
+      <compilerarg value="-I${basedir}/src/main/include" />
+      <compilerarg value="-I${basedir}/src/main/include/org/jitsi/impl/neomedia/codec/audio/g722" />
+      <compilerarg value="-O2" />
       <compilerarg value="-std=c99" />
       <compilerarg value="-Wall" />
-      <compilerarg value="-O2" />
-      <compilerarg value="-D_JNI_IMPLEMENTATION_" />
 
       <!-- Linux specific flags -->
       <compilerarg value="-m32" if="cross_32" unless="is.running.macos" />
@@ -292,7 +295,7 @@
       <linkerarg value="-ojng722.dll" if="is.running.windows" />
       <linkerarg value="-Wl,--kill-at" if="is.running.windows" />
 
-      <fileset dir="${src}/native/g722" includes="*.c"/>
+      <fileset dir="${src}/main/c/org/jitsi/impl/neomedia/codec/audio/g722" includes="*.c"/>
     </cc>
   </target>
 

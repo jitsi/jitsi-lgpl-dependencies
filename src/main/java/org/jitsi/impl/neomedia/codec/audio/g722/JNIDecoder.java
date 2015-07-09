@@ -6,6 +6,8 @@
  */
 package org.jitsi.impl.neomedia.codec.audio.g722;
 
+import org.jitsi.util.*;
+
 /**
  *
  * @author Lyubomir Marinov
@@ -14,7 +16,7 @@ public class JNIDecoder
 {
     static
     {
-        System.loadLibrary("jng722");
+        JNIUtils.loadLibrary("jng722", JNIDecoder.class.getClassLoader());
     }
 
     public static native void g722_decoder_close(long decoder);

@@ -5,7 +5,7 @@
  * See terms of license at gnu.org.
  */
 
-#include "org_jitsi_impl_neomedia_codec_FFmpeg.h"
+#include "org/jitsi/impl/neomedia/codec/FFmpeg.h"
 
 #include <stdint.h>
 #include <stdio.h>
