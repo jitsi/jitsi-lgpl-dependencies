@@ -6,3 +6,6 @@
 /target
 *.class
 *.swp
+/.settings
+.classpath
+.project
