@@ -13,10 +13,25 @@
 
   <artifactId>jitsi-lgpl-dependencies</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>jitsi-lgpl-dependencies</name>
   <url>https://github.com/jitsi/jitsi-lgpl-dependencies/</url>
+
+  <build>
+    <plugins>
+      <plugin>
+         <groupId>org.apache.felix</groupId>
+         <artifactId>maven-bundle-plugin</artifactId>
+         <configuration>
+            <instructions>
+               <Export-Package></Export-Package>
+               <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
+            </instructions>
+         </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
