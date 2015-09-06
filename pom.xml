@@ -27,10 +27,27 @@
             <instructions>
                <Export-Package></Export-Package>
                <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
+               <Bundle-NativeCode>
+                darwin/libjnffmpeg.jnilib;osname=MacOSX,
+                darwin/libjng722.jnilib;osname=MacOSX,
+                linux-x86/libjnffmpeg.so;osname=Linux;processor=x86,
+                linux-x86/libjng722.so;osname=Linux;processor=x86,
+                linux-x86-64/libjnffmpeg.so;osname=Linux;processor=x86-64,
+                linux-x86-64/libjng722.so;osname=Linux;processor=x86-64,
+                win32-x86/jnffmpeg.dll;osname=Win32;processor=x86,
+                win32-x86/jng722.dll;osname=Win32;processor=x86,
+                win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64,
+                win32-x86-64/jng722.dll;osname=Win32;processor=x86-64
+               </Bundle-NativeCode>
             </instructions>
          </configuration>
       </plugin>
     </plugins>
+    <resources>
+      <resource>
+        <directory>lib/native</directory>
+      </resource>
+    </resources>
   </build>
 
   <dependencies>
