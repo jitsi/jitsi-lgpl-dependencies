@@ -28,8 +28,8 @@
                <Export-Package></Export-Package>
                <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
                <Bundle-NativeCode>
-                darwin/libjnffmpeg.jnilib;osname=MacOSX,
-                darwin/libjng722.jnilib;osname=MacOSX,
+                darwin/libjnffmpeg.jnilib;osname=Mac OS X;processor=x86-64,
+                darwin/libjng722.jnilib;osname=Mac OS X;processor=x86-64,
                 linux-x86/libjnffmpeg.so;osname=Linux;processor=x86,
                 linux-x86/libjng722.so;osname=Linux;processor=x86,
                 linux-x86-64/libjnffmpeg.so;osname=Linux;processor=x86-64,
