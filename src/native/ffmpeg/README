@@ -76,7 +76,9 @@ patch -Np1 -i x264-01-freebsd.patch
 
 - Linux, Mac OS X
 
-./configure --enable-pic
+./configure --enable-pic --disable-opencl
+
+Without the opencl option, ffmpeg configure may fail with (ERROR: libx264 not found).
 
 - For android
 NDK_BASE=/../android-ndk-r8c
