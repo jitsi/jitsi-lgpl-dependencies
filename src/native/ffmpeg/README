@@ -97,7 +97,6 @@ Apply the following to libavcodec/Makefile
   --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver \
   --enable-libmp3lame --enable-encoder=libmp3lame \
   --enable-decoder=mjpeg --enable-parser=mjpeg \
-  --enable-libx264 --enable-gpl --enable-decoder=h264 --enable-encoder=libx264 --enable-parser=h264 \
   --enable-libvo-amrwbenc --enable-version3 --enable-decoder=amrwb --enable-encoder=libvo_amrwbenc \
   --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
   --extra-cflags="-I$MP3LAME_HOME/include -I$VOAMRWBENC_HOME -I$X264_HOME" \
