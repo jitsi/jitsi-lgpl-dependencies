@@ -79,6 +79,11 @@ public class FFmpeg
     public static final int CODEC_ID_H263P = 20;
 
     /**
+     * H264 codec ID.
+     */
+    public static final int CODEC_ID_H264 = 28;
+
+    /**
      * MJPEG codec ID.
      */
     public static final int CODEC_ID_MJPEG = 8;
@@ -112,6 +117,21 @@ public class FFmpeg
      * The minimum encoding buffer size defined by libavcodec.
      */
     public static final int FF_MIN_BUFFER_SIZE = 16384;
+
+    /**
+     * The H264 baseline profile.
+     */
+    public static final int FF_PROFILE_H264_BASELINE = 66;
+
+    /**
+     * The H264 high profile.
+     */
+    public static final int FF_PROFILE_H264_HIGH = 100;
+
+    /**
+     * The H264 main profile.
+     */
+    public static final int FF_PROFILE_H264_MAIN = 77;
 
     /**
      * ARGB format.
