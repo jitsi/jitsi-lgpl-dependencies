@@ -149,12 +149,100 @@
   </condition>
 
   <!--
+  <echo message="ffmpeg library: ${ffmpeg}" />
+  <echo message="lame library: ${lame}" />
   <echo message="Install directory ${native_install_dir}" />
   <echo message="arch: ${arch}" />
   -->
 
   <target name="init-native" description="Initialize native stuff">
     <mkdir dir="${obj}" />
+  </target>
+
+  <!-- compile ffmpeg library -->
+  <target name="ffmpeg" description="Build ffmpeg shared library" depends="init-native">
+    <fail message="ffmpeg repository not set!" unless="ffmpeg" />
+    <fail message="lame repository not set!" unless="lame" />
+    <fail message="vo-amrwbenc repository not set!" unless="voamrwbenc" />
+    <fail message="x264 repository not set!" unless="x264" />
+
+    <cc outtype="shared" name="gcc" outfile="${native_install_dir}/jnffmpeg" objdir="${obj}">
+      <!-- common compiler flags -->
+      <compilerarg value="-D_JNI_IMPLEMENTATION_" />
+      <compilerarg value="-D_XOPEN_SOURCE=600" />
+      <compilerarg value="-fPIC" />
+      <compilerarg value="-I${ffmpeg}" />
+      <compilerarg value="-I${basedir}/src/main/include" />
+      <compilerarg value="-m${arch}" />
+      <compilerarg value="-O2" />
+      <compilerarg value="-std=c99" />
+      <compilerarg value="-Wall" />
+      <compilerarg value="-D_JITSI_LIBAV_" if="LIBAV"/>
+
+      <linkerarg value="-L${ffmpeg}/libavcodec" />
+      <linkerarg value="-L${ffmpeg}/libavfilter" />
+      <linkerarg value="-L${ffmpeg}/libavformat" />
+      <linkerarg value="-L${ffmpeg}/libavutil" />
+      <linkerarg value="-L${ffmpeg}/libswscale" />
+      <!--
+        Depending on the way that lame is built, libmp3lame.a may be in
+        libmp3lame/ or libmp3lame/.libs/.
+      -->
+      <linkerarg value="-L${lame}/libmp3lame" />
+      <linkerarg value="-L${lame}/libmp3lame/.libs" />
+      <linkerarg value="-L${voamrwbenc}/.libs" />
+      <linkerarg value="-L${x264}" />
+      <linkerarg value="-m${arch}" />
+      <linkerarg value="-Wl,-z,relro" if="is.running.debian"/>
+      <!--
+        Static libraries MUST be at the end otherwise they will not be added to
+        the shared library.
+      -->
+      <linkerarg value="-Wl,-Bstatic" location="end" unless="LIBAV"/>
+      <linkerarg value="-lavformat" location="end" />
+      <linkerarg value="-lavcodec" location="end" />
+      <linkerarg value="-lavfilter" location="end" />
+      <linkerarg value="-lavutil" location="end" />
+      <linkerarg value="-lswscale" location="end" />
+      <linkerarg value="-lmp3lame" location="end" />
+      <linkerarg value="-lvo-amrwbenc" location="end" />
+      <linkerarg value="-lx264" location="end" />
+
+      <!-- Unix specific flags -->
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.unix" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/linux" if="is.running.linux" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/freebsd" if="is.running.freebsd" />
+
+      <linkerarg value="-Wl,-Bsymbolic" if="is.running.unix" />
+
+      <!-- Mac OS X specific flags -->
+      <compilerarg value="-mmacosx-version-min=10.4" if="is.running.macos"/>
+      <compilerarg value="-I${java.home}/include" if="is.running.macos" />
+      <compilerarg value="-I${java.home}/include/darwin" if="is.running.macos" />
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.macos" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/darwin" if="is.running.macos" />
+      <compilerarg value="-I/System/Library/Frameworks/JavaVM.framework/Headers" if="is.running.macos" />
+
+      <linkerarg value="-o" location="end" if="is.running.macos" />
+      <linkerarg value="libjnffmpeg.jnilib" location="end" if="is.running.macos" />
+      <linkerarg value="-dynamiclib" if="is.running.macos" />
+      <linkerarg value="-Wl,-read_only_relocs,suppress" if="is.running.macos" />
+
+      <!-- Windows specific flags -->
+      <compilerarg value="-D_WIN32_WINNT=0x0502" if="is.running.windows" />
+      <compilerarg value="-DWINVER=0x0502" if="is.running.windows" />
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.windows" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/win32" if="is.running.windows" />
+
+      <linkerarg value="-ojnffmpeg.dll" if="is.running.windows" />
+      <linkerarg value="-Wl,--kill-at" if="is.running.windows" />
+      <linkerarg value="-static-libgcc" if="is.running.windows" />
+
+      <fileset file="${src}/main/c/org/jitsi/impl/neomedia/codec/FFmpeg.c" />
+    </cc>
+
+    <delete dir="${obj}" failonerror="false" />
+    <delete file="${native_install_dir}/history.xml" failonerror="false" />
   </target>
 
   <!-- compile jng722 library -->
@@ -221,9 +309,18 @@
   <!-- Help, print useful targets -->
   <target name="help-native">
     <echo message="Targets available:" />
+    <echo message="'ant ffmpeg' to compile ffmpeg shared library" />
     <echo message="'ant g722' to compile jng722 shared library" />
     <echo message="" />
     <echo message="Options:" />
     <echo message="-Darch: cross-compile for 32-bit (-Darch=32), 64-bit (-Darch=64) or ppc (-Darch=ppc, Mac OS X only) targets. Windows users have to use gcc >= 4.5." />
+    <echo message="-Dopenh264: path to openh264 directory (ffmpeg JNI compilation)." />
+    <echo message="-Dlame: path to lame directory (ffmpeg JNI compilation)." />
+    <echo message="-Dffmpeg: path to ffmpeg directory (ffmpeg JNI compilation)." />
+    <echo message="" />
+    <echo message="Please note that external libraries such as ffmpeg, x264, and lame have to be compiled" />
+    <echo message="(follow READMEs in relevant directory) before trying to compile libjnffmpeg"  />
+    <echo message="When compiling libjnffmpeg you have to tell ant script the directory of ffmpeg and x264 with"  />
+    <echo message="-Dffmpeg=/path/to/ffmpeg and -Dx264=/path/to/x264 -Dlame=/path/to/lame"  />
   </target>
 </project>
