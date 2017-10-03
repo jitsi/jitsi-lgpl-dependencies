@@ -134,28 +134,23 @@
   <target name="dist" depends="make">
       <zip destfile="${dist}/windows/jitsi-lgpl-dependencies-${build.label}-x86.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
-          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/windows" includes="*.dll" prefix="win32-x86" />
+          <zipfileset dir="${native.libs}/win32-x86" includes="*.dll" prefix="win32-x86" />
       </zip>
       <zip destfile="${dist}/windows/jitsi-lgpl-dependencies-${build.label}-x64.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
-          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/windows-64" includes="*.dll" prefix="win32-x86-64" />
+          <zipfileset dir="${native.libs}/win32-x86-64" includes="*.dll" prefix="win32-x86-64" />
       </zip>
       <zip destfile="${dist}/macosx/jitsi-lgpl-dependencies-${build.label}.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
-          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/mac" includes="*.jnilib" prefix="darwin" />
+          <zipfileset dir="${native.libs}/darwin" includes="*.jnilib" prefix="darwin" />
       </zip>
       <zip destfile="${dist}/linux/jitsi-lgpl-dependencies-${build.label}-i386.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
-          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/linux" includes="*.so" prefix="linux-x86" />
+          <zipfileset dir="${native.libs}/linux-x86" includes="*.so" prefix="linux-x86" />
       </zip>
       <zip destfile="${dist}/linux/jitsi-lgpl-dependencies-${build.label}-amd64.zip">
           <zipfileset file="jitsi-lgpl-dependencies.jar" />
-          <zipfileset dir="lib" includes="*.jar" prefix="lib"/>
-          <zipfileset dir="lib/native/linux-64" includes="*.so" prefix="linux-x86-64" />
+          <zipfileset dir="${native.libs}/linux-x86-64" includes="*.so" prefix="linux-x86-64" />
       </zip>
       <zip destfile="${dist}/src/jitsi-lgpl-dependencies-src-${build.label}.zip">
         <zipfileset dir="." prefix="jitsi-lgpl-dependencies">
@@ -166,19 +161,6 @@
             <exclude name="target/" />
         </zipfileset>
       </zip>
-  </target>
-  <!-- Run the tests-->
-  <target name="test" depends="compile-test">
-      <mkdir dir="${junit.reports}"/>
-      <junit printsummary="yes" haltonfailure="true" fork="true" forkmode="once">
-        <formatter type="xml" />
-        <classpath refid="test.class.path"/>
-        <sysproperty
-              key="java.library.path"
-              path="${native.libs}/linux-x86-64:${native.libs}/linux-x86:${native.libs}/darwin:${native.libs}/win32-x86-64:${native.libs}/win32-x86" />
-        <test name="org.jitsi.sctp4j.SctpTestSuite"
-              todir="${junit.reports}"/>
-      </junit>
   </target>
 
 </project>

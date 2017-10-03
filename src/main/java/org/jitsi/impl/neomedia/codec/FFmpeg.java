@@ -225,7 +225,14 @@ public class FFmpeg
 
     static
     {
-        JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
+        try
+        {
+            JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
+        }catch (Throwable t)
+        {
+            t.printStackTrace();
+            throw t;
+        }
 
         av_register_all();
         avcodec_register_all();

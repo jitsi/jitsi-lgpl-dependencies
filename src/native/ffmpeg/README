@@ -1,6 +1,6 @@
 ﻿Notes 2013-07-05:
-    - Latest versions used: FFmpeg 1.0.10, lame 3.99.5, vo-amrwbenc-0.1.3,
-    x264 snapshot-20120928-2245-stable.
+    - Latest versions used: FFmpeg 3.3.4, lame 3.99.5, openh264 1.7.0.
+
     - Compiled with "Personal Builds/mingw-builds/4.9.2" of mingw-w64.
     - When configuring FFmpeg for x64 got error for liblame libs:
         undefined reference to `init_xrpow_core_sse`
@@ -15,21 +15,6 @@
     - If the FFmpeg JNI library crashes the application process with
     EXCEPTION_ACCESS_VIOLATION in msvcrt.dll and the crash log mentions H.264,
     configure x264 with --enable-debug.
-
-0. vo-amrwbenc-0.1.3
-
-./configure && make
-
-FFmpeg looks for enc_if.h as vo-amrwbenc/enc_if.h but the uninstalled
-vo-amrwbenc-0.1.3 does not have the vo-amrwbenc directory so go into
-vo-amrwbenc-0.1.3 and "ln -s . vo-amrwbenc" on Linux and Mac OS X or
-"mklink /d vo-amrwbenc ." on Windows.
-
-- Macosx 10.8
-Seems Apples's buildtools doesn't support the following instructions:
--Wl,-Bstatic (from ffmpeg target). And to static link vo-amrwbenc in ffmpeg,
-use the following configure:
-./configure --with-pic --enable-static --enable-shared=no
 
 1. lame
 
@@ -56,7 +41,7 @@ Windows notes:
       --host=x86_64-w64-mingw32.
     - If a script outputs errors mentioning \r, it may need dos2unix conversion.
 
-2. x264
+2. openh264
 
 - Windows
 
@@ -75,21 +60,21 @@ patch -Np1 -i x264-01-freebsd.patch
 ./configure --enable-pic
 
 - Linux, Mac OS X
-
-./configure --enable-pic
-
-- For android
-NDK_BASE=/../android-ndk-r8c
-./configure --enable-pic --host=arm-linux --disable-asm \
-    --sysroot="$NDK_BASE/platforms/android-9/arch-arm/" \
-    --cross-prefix=$NDK_BASE/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi-
+Install http://www.nasm.us/pub/nasm/releasebuilds/2.11.06/macosx/nasm-2.11.06-macosx.zip
+brew install pkg-config
+make install
+cd openh264-1.7.0/codec/api
+ln -s svc wels
+export PKG_CONFIG_PATH=$OH264
 
 3. ffmpeg
-
-Apply the following to libavcodec/Makefile
--OBJS-$(CONFIG_LIBMP3LAME_ENCODER)         += libmp3lame.o mpegaudiodecheader.o \
-+OBJS-$(CONFIG_LIBMP3LAME_ENCODER)         += libmp3lame.o mpegaudiodecheader.o mpegaudiodata.o \
-
+export PATH=/Users/dminkov/dev/ffmpeg/nasm-2.11.06:$PATH
+export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
+export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame
+export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
+export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.6.0
+export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.5.0
+export PKG_CONFIG_PATH=$OH264
 ./configure \
   --disable-shared --enable-static --shlibdir=. \
   --disable-debug \
@@ -97,11 +82,11 @@ Apply the following to libavcodec/Makefile
   --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver \
   --enable-libmp3lame --enable-encoder=libmp3lame \
   --enable-decoder=mjpeg --enable-parser=mjpeg \
-  --enable-libx264 --enable-gpl --enable-decoder=h264 --enable-encoder=libx264 --enable-parser=h264 \
-  --enable-libvo-amrwbenc --enable-version3 --enable-decoder=amrwb --enable-encoder=libvo_amrwbenc \
   --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
-  --extra-cflags="-I$MP3LAME_HOME/include -I$VOAMRWBENC_HOME -I$X264_HOME" \
-  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$VOAMRWBENC_HOME/.libs -L$X264_HOME"
+  --extra-cflags="-I$MP3LAME_HOME/include -I$OH264/codec/api" \
+  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$OH264" \
+  --enable-libopenh264 --enable-decoder=h264 --enable-encoder=libopenh264 --enable-parser=h264 \
+  --enable-pthreads --disable-iconv --enable-pic --disable-yasm
 
 - Windows
 
@@ -120,21 +105,16 @@ Add the following to the configure line:
 
 - Mac OS X
 
-Add the following to the configure line:
---enable-pic --enable-pthreads --enable-memalign-hack
-
-- For android remove lame and add
-  --arch=arm \
-  --target-os=linux \
-  --enable-runtime-cpudetect \
-  --sysroot="$NDK_BASE/platforms/android-9/arch-arm/" \
-  --cross-prefix=$NDK_BASE/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi-
 
 5. jnffmpeg
+export FFMPEG_HOME=/Users/dminkov/dev/ffmpeg/FFmpeg-n2.8.11
+export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
+export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.5.0
+ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=$OH264
 
 Define the environment variable JAVA_HOME so that the JNI headers can be found.
 Change the current directory to libjitsi/ and run "ant ffmpeg" passing it values
-for the ffmpeg, lame, voamrwbenc and x264 properties which specify the paths to
+for the ffmpeg, lame, and open264 properties which specify the paths to
 the homes of the development trees of the respective libraries.
 
 For creating universal libraries for Mac OS X see the instructions in src/native/build.xml.

@@ -27,6 +27,7 @@
                <Export-Package></Export-Package>
                <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
                <Bundle-NativeCode>
+                darwin/libjnffmpeg.jnilib;osname=Mac OS X;processor=x86-64,
                 darwin/libjng722.jnilib;osname=Mac OS X;processor=x86-64,
                 linux-x86/libjng722.so;osname=Linux;processor=x86,
                 linux-x86-64/libjng722.so;osname=Linux;processor=x86-64,
@@ -39,7 +40,7 @@
     </plugins>
     <resources>
       <resource>
-        <directory>lib/native</directory>
+        <directory>src/main/resources</directory>
       </resource>
     </resources>
   </build>
