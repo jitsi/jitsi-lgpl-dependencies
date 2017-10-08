@@ -16,13 +16,8 @@
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
 #include <libavfilter/avfiltergraph.h>
+#include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
-
-
-//#include <libavfilter/formats.h> /* ff_default_query_formats, ff_make_format_list, ff_set_common_formats */
-#include <libavfilter/internal.h> /* ff_request_frame */
-
-
 #include <libswscale/swscale.h>
 
 #define DEFINE_AVCODECCONTEXT_F_PROPERTY_SETTER(name, property) \
@@ -238,43 +233,43 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1encode_1audio
 
     jbyte *buf_ = (*env)->GetByteArrayElements(env, buf, NULL);
     if (!buf_)
-        {
+    {
         return (jint)-1;
     }
 
     jbyte *samples_ = (*env)->GetByteArrayElements(env, samples, NULL);
     if (!samples_)
-            {
+    {
         (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
         return (jint)-1;
     }
 
-               AVCodecContext *avctx = (AVCodecContext*)(intptr_t)ctx;
-               AVPacket pkt;
+    AVCodecContext *avctx = (AVCodecContext*)(intptr_t)ctx;
+    AVPacket pkt;
     av_init_packet(&pkt);
-               int got_output;
+    int got_output;
 
     AVFrame *frame = av_frame_alloc();
-               if (!frame)
+    if (!frame)
     {
         (*env)->ReleaseByteArrayElements(env, buf, buf_, JNI_ABORT);
         (*env)->ReleaseByteArrayElements(env, samples, samples_, JNI_ABORT);
-                   return AVERROR(ENOMEM);
+        return AVERROR(ENOMEM);
     }
 
-               frame->data[0] = (uint8_t*)(samples_ + samples_offset);
-               frame->linesize[0] = avctx->frame_size * av_get_bytes_per_sample(avctx->sample_fmt) *
-                   avctx->channels;
+    frame->data[0] = (uint8_t*)(samples_ + samples_offset);
+    frame->linesize[0] = avctx->frame_size * av_get_bytes_per_sample(avctx->sample_fmt) *
+       avctx->channels;
 
-               pkt.data = (uint8_t*)(buf_ + buf_offset);
-               pkt.size = buf_size;
+    pkt.data = (uint8_t*)(buf_ + buf_offset);
+    pkt.size = buf_size;
     jint ret = (jint) avcodec_encode_audio2(avctx, &pkt, frame, &got_output);
-               if (ret >= 0)
-            {
+    if (ret >= 0)
+    {
         ret = got_output ? pkt.size : 0;
-            }
+    }
 
-            (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
+    (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
     (*env)->ReleaseByteArrayElements(env, samples, samples_, JNI_ABORT);
     av_frame_free(&frame);
     av_free_packet(&pkt);
@@ -673,25 +668,6 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avfilter_1graph_1parse
                     (AVFilterInOut **) (intptr_t) outputs,
                     (AVClass *) (intptr_t) log_ctx);
 
-        /*
-         * FIXME The implementation at the time of this writing presumes that
-         * the first filter is buffer, the last filter is nullsink meant to be
-         * ffsink and the ffsink is expected to output in the format in which
-         * the buffer inputs.
-         */
-        if (0 == ret)
-        {
-            // Turn nullsink into ffsink.
-            unsigned filterCount = graph_->nb_filters;
-
-            if (filterCount)
-            {
-                AVFilterContext *ffsink = graph_->filters[filterCount - 1];
-                ffsink->input_pads->min_perms = AV_PERM_READ;
-                ffsink->input_pads->start_frame = NULL;
-            }
-        }
-
         (*env)->ReleaseStringUTFChars(env, filters, filters_);
     }
     else
@@ -846,42 +822,21 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_get_1filtered_1video_1frame
 {
     AVFrame *input_ = (AVFrame *) (intptr_t) input;
     AVFilterContext *buffer_ = (AVFilterContext *) (intptr_t) buffer;
-    AVFilterBufferRef *ref = NULL;
+    int result;
 
     input_->width = width;
     input_->height = height;
     input_->format = pixFmt;
-    if (av_buffersrc_write_frame(buffer_, input_) == 0)
+    result = av_buffersrc_write_frame(buffer_, input_);
+    if (result != 0)
     {
-        AVFilterContext *ffsink_ = (AVFilterContext *) (intptr_t) ffsink;
-
-        if (ff_request_frame(ffsink_->inputs[0]) == 0)
-        {
-            ref = (AVFilterBufferRef *) (ffsink_->priv);
-            if (ref)
-            {
-                AVFrame *output_ = (AVFrame *) (intptr_t) output;
-
-                /*
-                 * The data of cur_buf will be returned into output so it needs
-                 * to exist at least while output needs it. So take ownership of
-                 * cur_buf and the user of output will unref it when they are
-                 * done with output.
-                 */
-                ffsink_->priv = NULL;
-
-                memcpy(output_->data, ref->data, sizeof(output_->data));
-                memcpy(
-                    output_->linesize,
-                    ref->linesize,
-                    sizeof(output_->linesize));
-                output_->interlaced_frame = ref->video->interlaced;
-                output_->top_field_first = ref->video->top_field_first;
-            }
-        }
+        return (jlong)result;
     }
 
-    return (jlong) (intptr_t) ref;
+    AVFilterContext *ffsink_ = (AVFilterContext *) (intptr_t) ffsink;
+    AVFrame *output_ = (AVFrame *)(intptr_t)output;
+    result = av_buffersink_get_frame(ffsink_, output_);
+    return (jlong)result;
 }
 
 /*
