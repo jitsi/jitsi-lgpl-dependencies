@@ -715,15 +715,6 @@ public class FFmpeg
      */
     public static native void avfilter_register_all();
 
-    /**
-     * Removes a reference to a buffer. If the specified
-     * <tt>AVFilterBufferRef</tt> is the last reference to the buffer, the
-     * buffer is also automatically freed.
-     *
-     * @param ref a pointer to the <tt>AVFilterBufferRef</tt> instance to remove
-     */
-    public static native void avfilter_unref_buffer(long ref);
-
     public static native long avframe_get_data0(long frame);
 
     public static native int avframe_get_linesize0(long frame);

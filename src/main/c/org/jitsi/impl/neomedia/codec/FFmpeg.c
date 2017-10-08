@@ -707,13 +707,6 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avfilter_1register_1all
     avfilter_register_all();
 }
 
-JNIEXPORT void JNICALL
-Java_org_jitsi_impl_neomedia_codec_FFmpeg_avfilter_1unref_1buffer
-    (JNIEnv *env, jclass clazz, jlong ref)
-{
-    avfilter_unref_buffer((AVFilterBufferRef *) (intptr_t) ref);
-}
-
 /*
  * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
  * Method:    avframe_get_data0
