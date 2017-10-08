@@ -169,14 +169,12 @@
       <!-- common compiler flags -->
       <compilerarg value="-D_JNI_IMPLEMENTATION_" />
       <compilerarg value="-D_XOPEN_SOURCE=600" />
-      <compilerarg value="-fPIC" />
       <compilerarg value="-I${ffmpeg}" />
       <compilerarg value="-I${basedir}/src/main/include" />
       <compilerarg value="-m${arch}" />
       <compilerarg value="-O2" />
       <compilerarg value="-std=c99" />
       <compilerarg value="-Wall" />
-      <compilerarg value="-D_JITSI_LIBAV_" if="LIBAV"/>
 
       <linkerarg value="-L${ffmpeg}/libavcodec" />
       <linkerarg value="-L${ffmpeg}/libavfilter" />
@@ -226,10 +224,10 @@
       <!--<linkerarg value="-Wl,-read_only_relocs,suppress" if="is.running.macos" />-->
 
       <!-- Windows specific flags -->
-      <compilerarg value="-D_WIN32_WINNT=0x0502" if="is.running.windows" />
-      <compilerarg value="-DWINVER=0x0502" if="is.running.windows" />
       <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.windows" />
       <compilerarg value="-I${system.JAVA_HOME}/include/win32" if="is.running.windows" />
+      <compilerarg value="-D_WIN32_WINNT=0x0601" if="is.running.windows" />
+      <compilerarg value="-DWINVER=0x0601" if="is.running.windows" />
 
       <linkerarg value="-ojnffmpeg.dll" if="is.running.windows" />
       <linkerarg value="-Wl,--kill-at" if="is.running.windows" />

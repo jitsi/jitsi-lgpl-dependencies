@@ -1,22 +1,28 @@
-﻿Notes 2013-07-05:
-    - Latest versions used: FFmpeg 3.3.4, lame 3.99.5, openh264 1.7.0.
+﻿Notes 2017-10-07
+================
+Versions used:
+- FFmpeg 3.3.4
+- lame 3.99.5
+- openh264 1.7.0.
 
-    - Compiled with "Personal Builds/mingw-builds/4.9.2" of mingw-w64.
-    - When configuring FFmpeg for x64 got error for liblame libs:
-        undefined reference to `init_xrpow_core_sse`
-        ...
-    Fixed by removing "﻿#define HAVE_XMMINTRIN_H 1" from config.h.
-    - When configuring FFmpeg for x86 got:
-        undefined reference to `has_MMX_nasm'
-        undefined reference to `has_3DNow_nasm'
-        ....
-    Fixed by editing all Makefiles so that nasm is instructed about the host
-    architecture.
-    - If the FFmpeg JNI library crashes the application process with
-    EXCEPTION_ACCESS_VIOLATION in msvcrt.dll and the crash log mentions H.264,
-    configure x264 with --enable-debug.
+0. Windows Preparations
+-----------------------
+- Get MSYS2 64bit distro
+- Update it according to instructions
+- Install packages:
+  - make
+  - diffutils
+  - yasm
+  - mingw-w64-x86_64-gcc
+  - pkg-config
+  - git
+  - nasm
+
+Copy <msys2-installir>/mingw64/bin/x86_64-w64-mingw32-gcc-ar.exe to
+<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-ar.exe
 
 1. lame
+-------
 
 ./configure \
     --disable-shared --enable-static \
@@ -24,40 +30,15 @@
     --disable-analyzer-hooks --disable-decoder --disable-frontend \
     --with-pic
 
-FFmpeg looks for lame.h as lame/lame.h but the uninstalled lame-3.99.5 does not
+FFmpeg looks for lame.h as lame/lame.h but the installed lame-3.99.5 does not
 have the lame directory so go into lame-3.99.5/include and "ln -s . lame" on
 Linux and Mac OS X or "mklink /d lame ." on Windows.
 
-Windows notes:
-    - As an alternative to configure and a subsequent make, use:
-      make -f Makefile.unix HAVE_NASM=YES NOUNIXCMD=NO UNAME=MSDOS
-      Unfortunately, it may not work.
-    - Before make, open Makefile, libmp3lame/Makefile and
-      libmp3lame/i386/Makefile and make sure that the path to nasm.exe is
-      correct (e.g. have NASM=nasm and nasm.exe on the PATH);
-    - When building the x64 library on Windows x64, add
-      --build=x86_64-w64-mingw32 to the configure line. When building the x64
-      library on Windows x86, add --build=i686-pc-mingw32 and
-      --host=x86_64-w64-mingw32.
-    - If a script outputs errors mentioning \r, it may need dos2unix conversion.
-
 2. openh264
+-----------
 
 - Windows
-
-Download yasm for Windows (32-bit or 64-bit) at
-http://www.tortall.net/projects/yasm/wiki/Download and make it available in the
-PATH.
-
-When building the x64 library on Windows x86, add --host=x86_64-w64-mingw32 to
-the configure line.
-
-./configure --enable-win32thread
-
-- FreeBSD
-
-patch -Np1 -i x264-01-freebsd.patch
-./configure --enable-pic
+make ARCH=x86_64 PREFIX=/mingw64 install
 
 - Linux, Mac OS X
 Install http://www.nasm.us/pub/nasm/releasebuilds/2.11.06/macosx/nasm-2.11.06-macosx.zip
@@ -68,25 +49,25 @@ ln -s svc wels
 export PKG_CONFIG_PATH=$OH264
 
 3. ffmpeg
-export PATH=/Users/dminkov/dev/ffmpeg/nasm-2.11.06:$PATH
-export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
+---------
 export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame
 export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
-export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.6.0
-export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.5.0
-export PKG_CONFIG_PATH=$OH264
+export MP3LAME_HOME=/c/Java/lame-3.99.5
+export OH264=/c/Java/openh264
 ./configure \
-  --disable-shared --enable-static --shlibdir=. \
-  --disable-debug \
-  --disable-everything --disable-network \
-  --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver \
-  --enable-libmp3lame --enable-encoder=libmp3lame \
-  --enable-decoder=mjpeg --enable-parser=mjpeg \
-  --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
-  --extra-cflags="-I$MP3LAME_HOME/include -I$OH264/codec/api" \
-  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$OH264" \
-  --enable-libopenh264 --enable-decoder=h264 --enable-encoder=libopenh264 --enable-parser=h264 \
-  --enable-pthreads --disable-iconv --enable-pic --disable-yasm
+ --enable-version3 \
+ --disable-programs \
+ --disable-doc \
+ --disable-network \
+ --disable-everything \
+ --enable-libmp3lame --enable-encoder=libmp3lame \
+ --enable-parser=h264 \
+ --enable-libopenh264 --enable-encoder=libopenh264 --enable-decoder=libopenh264 \
+ --enable-decoder=mjpeg --enable-parser=mjpeg \
+ --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
+ --extra-cflags="-I$MP3LAME_HOME/include -I$OH264/codec/api" \
+ --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$OH264" \
+ 
 
 - Windows
 
@@ -96,7 +77,7 @@ Add the following to the configure line:
 
 x64:
 Add the following to the configure line used for x86:
---arch=amd64 --enable-cross-compile
+--arch=x86_64 --target-os=mingw32 --enable-cross-compile
 
 - FreeBSD, Linux
 
