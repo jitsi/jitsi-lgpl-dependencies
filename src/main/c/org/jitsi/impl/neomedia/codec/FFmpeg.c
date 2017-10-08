@@ -40,6 +40,15 @@
         ((AVCodecContext *) (intptr_t) ctx)->property = (int) property; \
     }
 
+JNIEXPORT jstring JNICALL
+Java_org_jitsi_impl_neomedia_codec_FFmpeg_av_1strerror
+    (JNIEnv *env, jclass clazz, jint errnum)
+{
+    char str[AV_ERROR_MAX_STRING_SIZE];
+    av_strerror((int)errnum, str, AV_ERROR_MAX_STRING_SIZE);
+    return (*env)->NewStringUTF(env, str);
+}
+
 JNIEXPORT jint JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_av_1get_1pix_1fmt
     (JNIEnv *env, jclass clazz, jstring name)

@@ -245,6 +245,8 @@ public class FFmpeg
         PIX_FMT_RGB32_1 = av_get_pix_fmt("argb"); //PIX_FMT_RGB32_1();
     }
 
+    public static native String av_strerror(int errnum);
+
     public static native int av_get_pix_fmt(String name);
 
     /**
