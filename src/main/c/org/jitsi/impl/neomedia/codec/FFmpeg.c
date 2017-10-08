@@ -231,56 +231,53 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1encode_1audio
     (JNIEnv *env, jclass clazz, jlong ctx, jbyteArray buf, jint buf_offset,
         jint buf_size, jbyteArray samples, jint samples_offset)
 {
-    jint ret;
-
-    if (buf)
+    if (!buf)
     {
-        jbyte *buf_ = (*env)->GetByteArrayElements(env, buf, NULL);
+        return (jint)-1;
+    }
 
-        if (buf_)
+    jbyte *buf_ = (*env)->GetByteArrayElements(env, buf, NULL);
+    if (!buf_)
         {
-            jbyte *samples_ = (*env)->GetByteArrayElements(env, samples, NULL);
+        return (jint)-1;
+    }
 
-            if (samples_)
+    jbyte *samples_ = (*env)->GetByteArrayElements(env, samples, NULL);
+    if (!samples_)
             {
+        (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
+        return (jint)-1;
+    }
+
                AVCodecContext *avctx = (AVCodecContext*)(intptr_t)ctx;
                AVPacket pkt;
-               AVFrame *frame = av_frame_alloc();
+    av_init_packet(&pkt);
                int got_output;
 
+    AVFrame *frame = av_frame_alloc();
                if (!frame)
+    {
+        (*env)->ReleaseByteArrayElements(env, buf, buf_, JNI_ABORT);
+        (*env)->ReleaseByteArrayElements(env, samples, samples_, JNI_ABORT);
                    return AVERROR(ENOMEM);
+    }
+
                frame->data[0] = (uint8_t*)(samples_ + samples_offset);
                frame->linesize[0] = avctx->frame_size * av_get_bytes_per_sample(avctx->sample_fmt) *
                    avctx->channels;
 
                pkt.data = (uint8_t*)(buf_ + buf_offset);
                pkt.size = buf_size;
-               ret = (jint) avcodec_encode_audio2(avctx, &pkt, frame, &got_output);
-
-                (*env)->ReleaseByteArrayElements(
-                        env,
-                        samples, samples_,
-                        JNI_ABORT);
-               av_frame_free(&frame);
+    jint ret = (jint) avcodec_encode_audio2(avctx, &pkt, frame, &got_output);
                if (ret >= 0)
-                   ret = got_output ? pkt.size : 0;
-            }
-            else
             {
-                ret = -1;
+        ret = got_output ? pkt.size : 0;
             }
+
             (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
-        }
-        else
-        {
-            ret = -1;
-        }
-    }
-    else
-    {
-        ret = -1;
-    }
+    (*env)->ReleaseByteArrayElements(env, samples, samples_, JNI_ABORT);
+    av_frame_free(&frame);
+    av_free_packet(&pkt);
     return ret;
 }
 
