@@ -238,12 +238,14 @@ public class FFmpeg
         avcodec_register_all();
         avfilter_register_all();
 
-        PIX_FMT_BGR32 = PIX_FMT_BGR32();
-        PIX_FMT_BGR32_1 = PIX_FMT_BGR32_1();
-        PIX_FMT_RGB24 = PIX_FMT_RGB24();
-        PIX_FMT_RGB32 = PIX_FMT_RGB32();
-        PIX_FMT_RGB32_1 = PIX_FMT_RGB32_1();
+        PIX_FMT_BGR32 = av_get_pix_fmt("bgra"); //PIX_FMT_BGR32();
+        PIX_FMT_BGR32_1 = av_get_pix_fmt("abgr"); //PIX_FMT_BGR32_1();
+        PIX_FMT_RGB24 = av_get_pix_fmt("rgb24"); //PIX_FMT_RGB24();
+        PIX_FMT_RGB32 = av_get_pix_fmt("rgba"); //PIX_FMT_RGB32();
+        PIX_FMT_RGB32_1 = av_get_pix_fmt("argb"); //PIX_FMT_RGB32_1();
     }
+
+    public static native int av_get_pix_fmt(String name);
 
     /**
      * Free a native pointer allocated by av_malloc.

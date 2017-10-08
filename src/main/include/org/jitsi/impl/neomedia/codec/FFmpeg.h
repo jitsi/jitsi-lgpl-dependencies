@@ -9,6 +9,16 @@ extern "C" {
 #endif
 /*
  * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
+/*
+ * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
+ * Method:    av_get_pix_fmt
+ * Signature: (Ljava.lang.String;)I
+ */
+JNIEXPORT jint JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_av_1get_1pix_1fmt
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
  * Method:    av_free
  * Signature: (J)V
  */

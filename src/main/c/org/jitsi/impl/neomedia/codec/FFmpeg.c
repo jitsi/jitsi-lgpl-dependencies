@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <libavutil/avutil.h>
+#include <libavutil/pixdesc.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
@@ -38,6 +39,16 @@
     { \
         ((AVCodecContext *) (intptr_t) ctx)->property = (int) property; \
     }
+
+JNIEXPORT jint JNICALL
+Java_org_jitsi_impl_neomedia_codec_FFmpeg_av_1get_1pix_1fmt
+    (JNIEnv *env, jclass clazz, jstring name)
+{
+    const char *cname = (*env)->GetStringUTFChars(env, name, 0);
+    enum AVPixelFormat pix_fmt = av_get_pix_fmt(cname);
+    (*env)->ReleaseStringUTFChars(env, name, cname);
+    return (jint)pix_fmt;
+}
 
 JNIEXPORT void JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_av_1free
