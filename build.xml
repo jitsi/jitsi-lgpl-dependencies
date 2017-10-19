@@ -2,6 +2,7 @@
 <project name="jitsi-lgpl-dependencies">
   <property name="src" value="src"/>
   <property name="native.libs" value="${src}/main/resources"/>
+  <property environment="system"/>
   <loadproperties srcfile="build-dir.properties"/>
   <!-- Import JNI build xml -->
   <import file="src/native/build.xml"/>
