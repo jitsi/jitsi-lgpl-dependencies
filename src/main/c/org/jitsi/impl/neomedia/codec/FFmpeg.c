@@ -433,21 +433,12 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1open2
     return ret;
 }
 
-/**
- * Implements a log callback which does not log anything and thus prevents logs
- * from appearing on stdout and/or stderr.
- */
-static void
-null_log_callback(void* ptr, int level, const char* fmt, va_list vl)
-{
-}
-
 JNIEXPORT void JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1register_1all
     (JNIEnv *env, jclass clazz)
 {
+    av_log_set_level(AV_LOG_FATAL);
     avcodec_register_all();
-    av_log_set_callback(null_log_callback);
 }
 
 JNIEXPORT void JNICALL
