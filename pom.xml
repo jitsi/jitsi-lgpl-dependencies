@@ -11,7 +11,7 @@
   </parent>
 
   <artifactId>jitsi-lgpl-dependencies</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>jitsi-lgpl-dependencies</name>
@@ -27,12 +27,12 @@
                <Export-Package></Export-Package>
                <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
                <Bundle-NativeCode>
-                darwin/libjnffmpeg.jnilib;osname=Mac OS X;processor=x86-64,
-                darwin/libjng722.jnilib;osname=Mac OS X;processor=x86-64,
                 linux-x86/libjng722.so;osname=Linux;processor=x86,
                 linux-x86-64/libjng722.so;osname=Linux;processor=x86-64,
                 win32-x86/jng722.dll;osname=Win32;processor=x86,
-                win32-x86-64/jng722.dll;osname=Win32;processor=x86-64
+                win32-x86/jnffmpeg.dll;osname=Win32;processor=x86,
+                win32-x86-64/jng722.dll;osname=Win32;processor=x86-64,
+                win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64
                </Bundle-NativeCode>
             </instructions>
          </configuration>
