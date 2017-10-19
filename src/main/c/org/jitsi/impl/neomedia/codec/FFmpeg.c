@@ -226,54 +226,84 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1encode_1audio
     (JNIEnv *env, jclass clazz, jlong ctx, jbyteArray buf, jint buf_offset,
         jint buf_size, jbyteArray samples, jint samples_offset)
 {
-    if (!buf)
-    {
-        return (jint)-1;
-    }
-
-    jbyte *buf_ = (*env)->GetByteArrayElements(env, buf, NULL);
-    if (!buf_)
-    {
-        return (jint)-1;
-    }
-
-    jbyte *samples_ = (*env)->GetByteArrayElements(env, samples, NULL);
-    if (!samples_)
-    {
-        (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
-        return (jint)-1;
-    }
-
-    AVCodecContext *avctx = (AVCodecContext*)(intptr_t)ctx;
+    int ret = -1;
+    jint samples_size;
+    jbyte *buf_ = NULL;
+    jbyte *samples_ = NULL;
+    AVFrame *frame = NULL;
+    AVCodecContext *avctx = NULL;
+    int got_output = 0;
     AVPacket pkt;
     av_init_packet(&pkt);
-    int got_output;
 
-    AVFrame *frame = av_frame_alloc();
-    if (!frame)
+    // validate parameters
+    if (!buf || !ctx)
     {
-        (*env)->ReleaseByteArrayElements(env, buf, buf_, JNI_ABORT);
-        (*env)->ReleaseByteArrayElements(env, samples, samples_, JNI_ABORT);
-        return AVERROR(ENOMEM);
+        goto end;
     }
 
-    frame->data[0] = (uint8_t*)(samples_ + samples_offset);
-    frame->linesize[0] = avctx->frame_size * av_get_bytes_per_sample(avctx->sample_fmt) *
-       avctx->channels;
+    // convert java objects to pointers
+    avctx = (AVCodecContext*)(intptr_t)ctx;
+    buf_ = (*env)->GetByteArrayElements(env, buf, NULL);
+    if (!buf_)
+    {
+        goto end;
+    }
+
+    samples_ = (*env)->GetByteArrayElements(env, samples, NULL);
+    if (!samples_)
+    {
+        goto end;
+    }
+
+    samples_size = (*env)->GetArrayLength(env, samples);
+
+    // prepare encoder input
+    frame = av_frame_alloc();
+    if (!frame)
+    {
+        ret = AVERROR(ENOMEM);
+        goto end;
+    }
+
+    frame->nb_samples = avctx->frame_size;
+    frame->format = avctx->sample_fmt;
+    frame->channel_layout = avctx->channel_layout;
+
+    ret = avcodec_fill_audio_frame(frame,
+        avctx->channels,
+        avctx->sample_fmt,
+        samples_ + samples_offset,
+        samples_size - samples_offset, 0);
+    if (ret < 0)
+    {
+        goto end;
+    }
 
     pkt.data = (uint8_t*)(buf_ + buf_offset);
     pkt.size = buf_size;
-    jint ret = (jint) avcodec_encode_audio2(avctx, &pkt, frame, &got_output);
-    if (ret >= 0)
+
+    // encode
+    ret = avcodec_encode_audio2(avctx, &pkt, frame, &got_output);
+    if (ret == 0)
     {
         ret = got_output ? pkt.size : 0;
     }
 
-    (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
-    (*env)->ReleaseByteArrayElements(env, samples, samples_, JNI_ABORT);
+end:
+    if (buf_)
+    {
+        (*env)->ReleaseByteArrayElements(env, buf, buf_, 0);
+    }
+
+    if (samples_)
+    {
+        (*env)->ReleaseByteArrayElements(env, samples, samples_, JNI_ABORT);
+    }
+
     av_frame_free(&frame);
     av_free_packet(&pkt);
-    return ret;
+    return (jint) ret;
 }
 
 JNIEXPORT jint JNICALL
