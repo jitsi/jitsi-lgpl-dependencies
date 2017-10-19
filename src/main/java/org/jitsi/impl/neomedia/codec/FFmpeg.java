@@ -507,6 +507,8 @@ public class FFmpeg
      */
     public static native void avcodeccontext_set_channels(
             long ctx, int channels);
+    public static native void avcodeccontext_set_channel_layout(
+        long ctx, int channelLayout);
 
     public static native void avcodeccontext_set_chromaoffset(long ctx,
         int chromaoffset);

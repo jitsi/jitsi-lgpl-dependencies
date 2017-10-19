@@ -238,6 +238,13 @@ JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_
  */
 JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1channels
   (JNIEnv *, jclass, jlong, jint);
+/*
+ * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
+ * Method:    avcodeccontext_set_channels
+ * Signature: (JI)V
+ */
+JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1channel_1layout
+  (JNIEnv *, jclass, jlong, jint);
 
 /*
  * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
