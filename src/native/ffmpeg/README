@@ -50,8 +50,6 @@ export PKG_CONFIG_PATH=$OH264
 
 3. ffmpeg
 ---------
-export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame
-export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
 export MP3LAME_HOME=/c/Java/lame-3.99.5
 export OH264=/c/Java/openh264
 ./configure \
