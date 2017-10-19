@@ -29,6 +29,11 @@ public class FFmpeg
     public static final int AV_SAMPLE_FMT_S16 = 1;
 
     /**
+     * The AV sample format for signed 16 planar.
+     */
+    public static final int AV_SAMPLE_FMT_S16P = 6;
+
+    /**
      * AC pred flag.
      */
     public static final int CODEC_FLAG_AC_PRED = 0x02000000;
@@ -227,8 +232,10 @@ public class FFmpeg
     {
         try
         {
+            System.loadLibrary("libopenh264");
             JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
-        }catch (Throwable t)
+        }
+        catch (Throwable t)
         {
             t.printStackTrace();
             throw t;
