@@ -8,6 +8,8 @@ package org.jitsi.impl.neomedia.codec;
 
 import org.jitsi.util.*;
 
+import java.nio.*;
+
 /**
  * Provides the interface to the native FFmpeg library.
  *
@@ -233,6 +235,10 @@ public class FFmpeg
         try
         {
             System.loadLibrary("libopenh264");
+        }
+        catch (Throwable t){}
+        try
+        {
             JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
         }
         catch (Throwable t)
@@ -245,11 +251,17 @@ public class FFmpeg
         avcodec_register_all();
         avfilter_register_all();
 
-        PIX_FMT_BGR32 = av_get_pix_fmt("bgra"); //PIX_FMT_BGR32();
-        PIX_FMT_BGR32_1 = av_get_pix_fmt("abgr"); //PIX_FMT_BGR32_1();
+        PIX_FMT_BGR32 = av_get_pix_fmt("bgr32"); //PIX_FMT_BGR32();
         PIX_FMT_RGB24 = av_get_pix_fmt("rgb24"); //PIX_FMT_RGB24();
-        PIX_FMT_RGB32 = av_get_pix_fmt("rgba"); //PIX_FMT_RGB32();
-        PIX_FMT_RGB32_1 = av_get_pix_fmt("argb"); //PIX_FMT_RGB32_1();
+        PIX_FMT_RGB32 = av_get_pix_fmt("rgb32"); //PIX_FMT_RGB32();
+
+        if (ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN)) {
+            PIX_FMT_BGR32_1 = av_get_pix_fmt("bgra");
+            PIX_FMT_RGB32_1 = av_get_pix_fmt("rgba");
+        } else {
+            PIX_FMT_BGR32_1 = av_get_pix_fmt("argb");
+            PIX_FMT_RGB32_1 = av_get_pix_fmt("abgr");
+        }
     }
 
     public static native String av_strerror(int errnum);
