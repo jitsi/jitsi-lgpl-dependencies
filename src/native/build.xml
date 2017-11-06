@@ -240,30 +240,6 @@
       <param name="srcname" value="/usr/local/lib/libopenh264.4.dylib"/>
       <param name="dstname" value="libopenh264.4.dylib"/>
     </antcall>
-    <antcall target="-update-darwin-ffmpeg-binary">
-      <param name="srcname" value="/usr/local/lib/libmp3lame.0.dylib"/>
-      <param name="dstname" value="libmp3lame.0.dylib"/>
-    </antcall>
-    <antcall target="-update-darwin-ffmpeg-binary">
-      <param name="srcname" value="/usr/local/lib/libavformat.57.dylib"/>
-      <param name="dstname" value="libavformat.57.dylib"/>
-    </antcall>
-    <antcall target="-update-darwin-ffmpeg-binary">
-      <param name="srcname" value="/usr/local/lib/libavcodec.57.dylib"/>
-      <param name="dstname" value="libavcodec.57.dylib"/>
-    </antcall>
-    <antcall target="-update-darwin-ffmpeg-binary">
-      <param name="srcname" value="/usr/local/lib/libavfilter.6.dylib"/>
-      <param name="dstname" value="libavfilter.6.dylib"/>
-    </antcall>
-    <antcall target="-update-darwin-ffmpeg-binary">
-      <param name="srcname" value="/usr/local/lib/libavutil.55.dylib"/>
-      <param name="dstname" value="libavutil.55.dylib"/>
-    </antcall>
-    <antcall target="-update-darwin-ffmpeg-binary">
-      <param name="srcname" value="/usr/local/lib/libswscale.4.dylib"/>
-      <param name="dstname" value="libswscale.4.dylib"/>
-    </antcall>
 
     <delete dir="${obj}" failonerror="false" />
     <delete file="${native_install_dir}/history.xml" failonerror="false" />
