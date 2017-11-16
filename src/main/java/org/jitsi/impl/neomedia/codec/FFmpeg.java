@@ -247,7 +247,6 @@ public class FFmpeg
         {
             // TODO remove stacktrace print
             t.printStackTrace();
-            throw t;
         }
         try
         {
