@@ -165,6 +165,21 @@
     <fail message="lame repository not set!" unless="lame" />
     <fail message="openh264 repository not set!" unless="openh264" />
 
+    <condition property="is.mac.no.openh264">
+      <and>
+        <isset property="is.running.macos"/>
+        <isset property="skipOpenh264"/>
+      </and>
+    </condition>
+    <condition property="is.mac.openh264">
+      <and>
+        <isset property="is.running.macos"/>
+        <not>
+          <isset property="skipOpenh264"/>
+        </not>
+      </and>
+    </condition>
+
     <cc outtype="shared" name="gcc" outfile="${native_install_dir}/jnffmpeg" objdir="${obj}">
       <!-- common compiler flags -->
       <compilerarg value="-D_JNI_IMPLEMENTATION_" />
@@ -201,7 +216,7 @@
       <linkerarg value="-lavutil" location="end" />
       <linkerarg value="-lswscale" location="end" />
       <linkerarg value="-lmp3lame" location="end" />
-      <linkerarg value="-lopenh264" location="end" />
+      <linkerarg value="-lopenh264" location="end" unless="skipOpenh264"/>
 
       <!-- Unix specific flags -->
       <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.unix" />
@@ -219,7 +234,8 @@
       <compilerarg value="-I/System/Library/Frameworks/JavaVM.framework/Headers" if="is.running.macos" />
 
       <linkerarg value="-o" location="end" if="is.running.macos" />
-      <linkerarg value="libjnffmpeg.jnilib" location="end" if="is.running.macos" />
+      <linkerarg value="libjnffmpeg-no-openh264.jnilib" location="end" if="is.mac.no.openh264"/>
+      <linkerarg value="libjnffmpeg.jnilib" location="end" if="is.mac.openh264" />
       <linkerarg value="-dynamiclib" if="is.running.macos" />
       <!--<linkerarg value="-Wl,-read_only_relocs,suppress" if="is.running.macos" />-->
 

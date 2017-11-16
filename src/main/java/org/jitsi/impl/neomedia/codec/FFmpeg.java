@@ -237,12 +237,27 @@ public class FFmpeg
             System.loadLibrary("libopenh264");
         }
         catch (Throwable t){}
+        boolean jnffmpegLoaded = false;
         try
         {
             JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
+            jnffmpegLoaded = true;
         }
         catch (Throwable t)
         {
+            // TODO remove stacktrace print
+            t.printStackTrace();
+            throw t;
+        }
+        try
+        {
+            if (!jnffmpegLoaded)
+                JNIUtils.loadLibrary(
+                    "jnffmpeg-no-openh264", FFmpeg.class.getClassLoader());
+        }
+        catch (Throwable t)
+        {
+            // TODO remove stacktrace print
             t.printStackTrace();
             throw t;
         }

@@ -50,6 +50,7 @@ export PKG_CONFIG_PATH=$OH264
 
 3. ffmpeg
 ---------
+We need to set of compiled ffmpeg one with and one without libopenh264
 export MP3LAME_HOME=/c/Java/lame-3.99.5
 export OH264=/c/Java/openh264
 ./configure \
@@ -66,7 +67,7 @@ export OH264=/c/Java/openh264
  --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
  --extra-cflags="-I$MP3LAME_HOME/include -I$OH264/codec/api" \
  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$OH264"
- 
+
 
 - Windows
 
@@ -87,10 +88,12 @@ Add the following to the configure line:
 
 
 5. jnffmpeg
-export FFMPEG_HOME=/Users/dminkov/dev/ffmpeg/FFmpeg-n2.8.11
+export FFMPEG_HOME=/Users/dminkov/dev/ffmpeg/ffmpeg-3.3.4
+export FFMPEG_HOME_NO_OPENH264=/Users/dminkov/dev/ffmpeg/ffmpeg-3.3.4
 export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
-export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.5.0
+export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
 ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=$OH264
+ant ffmpeg -Dffmpeg=$FFMPEG_HOME_NO_OPENH264 -Dlame=$MP3LAME_HOME -Dopenh264=$OH264 -DskipOpenh264=true
 
 Define the environment variable JAVA_HOME so that the JNI headers can be found.
 Change the current directory to libjitsi/ and run "ant ffmpeg" passing it values
