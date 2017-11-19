@@ -273,7 +273,7 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1encode_1audio
     ret = avcodec_fill_audio_frame(frame,
         avctx->channels,
         avctx->sample_fmt,
-        samples_ + samples_offset,
+        (uint8_t*) (samples_ + samples_offset),
         samples_size - samples_offset, 0);
     if (ret < 0)
     {
