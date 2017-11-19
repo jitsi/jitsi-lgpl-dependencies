@@ -1,61 +1,85 @@
-﻿Notes 2017-10-07
-================
-Versions used:
+﻿Build jnffmpeg
+==============
+
+Versions
+--------
 - FFmpeg 3.4
 - lame 3.99.5
 - openh264 1.7.0.
 
-0. Windows Preparations
------------------------
-- Get MSYS2 64bit distro
-- Update it according to instructions
-- Install packages:
+Prerequisites
+-------------
+
+### Windows
+- Get [MSYS2 64bit distro](http://www.msys2.org/)
+- Update it according to [instructions](https://github.com/msys2/msys2/wiki/MSYS2-installation)
+- Install packages (pacman -S):
   - make
   - diffutils
   - yasm
+  - mingw-w64-i686-gcc
   - mingw-w64-x86_64-gcc
   - pkg-config
   - git
   - nasm
 
-Copy <msys2-installir>/mingw64/bin/x86_64-w64-mingw32-gcc-ar.exe to
-<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-ar.exe
+Copy `<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-gcc-ar.exe` to
+`<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-ar.exe`
 
-1. lame
--------
+### OS X
+- [nasm](http://www.nasm.us/pub/nasm/releasebuilds/2.11.06/macosx/nasm-2.11.06-macosx.zip)
+- `brew install pkg-config`
 
+
+Libraries
+---------
+### lame
+
+```
 ./configure \
     --disable-shared --enable-static \
     --enable-nasm \
     --disable-analyzer-hooks --disable-decoder --disable-frontend \
-    --with-pic
+    --with-pic -msse
 
-FFmpeg looks for lame.h as lame/lame.h but the installed lame-3.99.5 does not
-have the lame directory so go into lame-3.99.5/include and "ln -s . lame" on
-Linux and Mac OS X or "mklink /d lame ." on Windows.
+make
+```
 
-2. openh264
------------
+FFmpeg looks for `lame.h` as `lame/lame.h` but the installed lame-3.99.5 does not
+have the lame directory so go into lame-3.99.5/include and `ln -s . lame` on
+Linux and Mac OS X or `mklink /d lame .` on Windows.
 
-- Windows
-make ARCH=x86_64 PREFIX=/mingw64 install
+For x86, `export CFLAGS=-msse` to enable the SSE intrinsics. See Lame#443 for
+details: https://sourceforge.net/p/lame/bugs/443/
 
-- Linux, Mac OS X
-Install http://www.nasm.us/pub/nasm/releasebuilds/2.11.06/macosx/nasm-2.11.06-macosx.zip
-brew install pkg-config
+### openh264
+
+#### Windows
+x86:
+`make ARCH=i686 PREFIX=/mingw32 install`
+
+x64:
+`make ARCH=x86_64 PREFIX=/mingw64 install`
+
+#### Mac OS X
+```
 make install
 cd openh264-1.7.0/codec/api
 ln -s svc wels
 export PKG_CONFIG_PATH=$OH264
+```
 
-3. ffmpeg
----------
-We need to set of compiled ffmpeg one with and one without libopenh264
+### ffmpeg
+We need two different ffmpeg builds, one with and one without libopenh264
+
+Set paths for the previously compiled lame and openh264:
+```
 export MP3LAME_HOME=/c/Java/lame-3.99.5
 export OH264=/c/Java/openh264
+```
 
 1) With OpenH264
-
+```
 ./configure \
  --enable-version3 \
  --disable-programs \
@@ -71,7 +95,11 @@ export OH264=/c/Java/openh264
  --extra-cflags="-I$MP3LAME_HOME/include -I$OH264/codec/api" \
  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$OH264"
 
+make
+```
+
 2) Without OpenH264
+```
 ./configure \
  --enable-version3 \
  --disable-programs \
@@ -85,35 +113,25 @@ export OH264=/c/Java/openh264
  --extra-cflags="-I$MP3LAME_HOME/include" \
  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs"
 
+make
+```
 
-- Windows
-x86:
-Add the following to the configure line:
---target-os=mingw32
-
-x64:
-Add the following to the configure line used for x86:
---target-os=mingw32 --arch=x86_64 --enable-cross-compile
-
-- FreeBSD, Linux
-
-Add the following to the configure line:
---enable-pic
-
-- Mac OS X
+On Linux, add the following to the configure line:
+`--enable-pic`
 
 
-5. jnffmpeg
+### jnffmpeg
+```
 export FFMPEG_HOME=/Users/dminkov/dev/ffmpeg/ffmpeg-3.3.4
 export FFMPEG_HOME_NO_OPENH264=/Users/dminkov/dev/ffmpeg/ffmpeg-3.3.4
 export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
 export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
-ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=$OH264
+
+ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=.
 ant ffmpeg -Dffmpeg=$FFMPEG_HOME_NO_OPENH264 -Dlame=$MP3LAME_HOME -Dopenh264=$OH264 -DskipOpenh264=true
+```
 
 Define the environment variable JAVA_HOME so that the JNI headers can be found.
 Change the current directory to libjitsi/ and run "ant ffmpeg" passing it values
 for the ffmpeg, lame, and open264 properties which specify the paths to
 the homes of the development trees of the respective libraries.
-
-For creating universal libraries for Mac OS X see the instructions in src/native/build.xml.
