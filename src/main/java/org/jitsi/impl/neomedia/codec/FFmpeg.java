@@ -265,16 +265,25 @@ public class FFmpeg
         avcodec_register_all();
         avfilter_register_all();
 
-        PIX_FMT_BGR32 = av_get_pix_fmt("bgr32"); //PIX_FMT_BGR32();
-        PIX_FMT_RGB24 = av_get_pix_fmt("rgb24"); //PIX_FMT_RGB24();
-        PIX_FMT_RGB32 = av_get_pix_fmt("rgb32"); //PIX_FMT_RGB32();
+        if (ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN))
+        {
+            PIX_FMT_RGB24 = av_get_pix_fmt("rgb24");
 
-        if (ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN)) {
-            PIX_FMT_BGR32_1 = av_get_pix_fmt("bgra");
+            PIX_FMT_RGB32 = av_get_pix_fmt("argb");
             PIX_FMT_RGB32_1 = av_get_pix_fmt("rgba");
-        } else {
-            PIX_FMT_BGR32_1 = av_get_pix_fmt("argb");
+
+            PIX_FMT_BGR32 = av_get_pix_fmt("abgr");
+            PIX_FMT_BGR32_1 = av_get_pix_fmt("bgra");
+        }
+        else
+        {
+            PIX_FMT_RGB24 = av_get_pix_fmt("bgr24");
+
+            PIX_FMT_RGB32 = av_get_pix_fmt("bgra");
             PIX_FMT_RGB32_1 = av_get_pix_fmt("abgr");
+
+            PIX_FMT_BGR32 = av_get_pix_fmt("rgba");
+            PIX_FMT_BGR32_1 = av_get_pix_fmt("argb");
         }
     }
 
