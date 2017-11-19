@@ -1,9 +1,336 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project name="jitsi-lgpl-dependencies">
+<project name="jitsi-lgpl-dependencies-native" default="help">
   <property name="src" value="src"/>
   <property name="native.libs" value="${src}/main/resources"/>
+  <property name="obj" value="target/native_obj" />
+
   <property environment="system"/>
   <loadproperties srcfile="build-dir.properties"/>
-  <!-- Import JNI build xml -->
-  <import file="src/native/build.xml"/>
+
+  <!-- additionnal property -->
+
+  <!-- load cpptasks jar to have <cc /> tag -->
+  <taskdef resource="cpptasks.tasks">
+    <!-- load cpptasks jar -->
+    <classpath>
+      <pathelement location="lib/installer-exclude/cpptasks.jar"/>
+    </classpath>
+  </taskdef>
+
+  <!-- windows specific properties -->
+  <condition property="is.running.windows" value="${os.name}">
+      <os family="windows"/>
+  </condition>
+
+  <!-- linux specific properties -->
+  <condition property="is.running.linux" value="${os.name}">
+      <equals arg1="${os.name}" arg2="linux" casesensitive="false" trim="true"/>
+  </condition>
+
+  <!-- mac specific properties -->
+  <condition property="is.running.macos" value="${os.name}">
+      <os family="mac"/>
+  </condition>
+
+  <condition property="arch" value="32">
+    <or>
+      <os arch="x86" />
+      <os arch="i386" />
+      <os arch="i486" />
+      <os arch="i586" />
+      <os arch="i686" />
+    </or>
+  </condition>
+  <condition property="arch" value="64">
+    <or>
+      <os arch="amd64" />
+      <os arch="x86_64" />
+    </or>
+  </condition>
+  <condition property="is.running.windows_32" value="y">
+    <and>
+      <isset property="is.running.windows"/>
+      <equals arg1="${arch}" arg2="32" />
+    </and>
+  </condition>
+  <condition property="is.running.windows_64" value="y">
+    <and>
+      <isset property="is.running.windows"/>
+      <equals arg1="${arch}" arg2="64" />
+    </and>
+  </condition>
+
+  <!--
+    Cross compilation. It is mainly used on Linux to cross-compile 32-bit
+    binaries on a 64-bit host.
+  -->
+  <condition property="cross_32" value="y" >
+    <equals arg1="${arch}" arg2="32" />
+  </condition>
+
+  <condition property="cross_64" value="y" >
+    <equals arg1="${arch}" arg2="64" />
+  </condition>
+
+  <!-- Mac OS X only -->
+  <condition property="cross_ppc" value="y" >
+    <equals arg1="${arch}" arg2="ppc" />
+  </condition>
+
+  <!-- initialize destination directory -->
+  <condition property="native_install_dir" value="${native.libs}/win32-x86">
+    <and>
+      <isset property="is.running.windows"/>
+      <equals arg1="${arch}" arg2="32" />
+    </and>
+  </condition>
+
+  <condition property="native_install_dir" value="${native.libs}/win32-x86-64">
+    <and>
+      <isset property="is.running.windows"/>
+      <equals arg1="${arch}" arg2="64" />
+    </and>
+  </condition>
+
+  <condition property="native_install_dir" value="${native.libs}/linux-x86">
+    <and>
+      <isset property="is.running.linux"/>
+      <equals arg1="${arch}" arg2="32" />
+    </and>
+  </condition>
+
+  <condition property="native_install_dir" value="${native.libs}/linux-x86-64">
+    <and>
+      <isset property="is.running.linux"/>
+      <equals arg1="${arch}" arg2="64" />
+    </and>
+  </condition>
+
+  <condition property="native_install_dir" value="${native.libs}/darwin">
+    <isset property="is.running.macos"/>
+  </condition>
+
+  <!-- The path to the dpkg-buildpackage tool -->
+  <property name="dpkg-buildpackage" value="/usr/bin/dpkg-buildpackage"/>
+  <!-- The path to the dh_testdir tool -->
+  <property name="dh_testdir" value="/usr/bin/dh_testdir"/>
+  <condition property="is.running.debian">
+    <and>
+        <isset property="is.running.linux"/>
+        <available file="${dpkg-buildpackage}"/>
+        <available file="${dh_testdir}"/>
+    </and>
+  </condition>
+
+  <!--
+  <echo message="ffmpeg library: ${ffmpeg}" />
+  <echo message="lame library: ${lame}" />
+  <echo message="Install directory ${native_install_dir}" />
+  <echo message="arch: ${arch}" />
+  -->
+
+  <target name="init" description="Initialize native stuff">
+    <mkdir dir="${obj}" />
+  </target>
+
+  <!-- compile ffmpeg library -->
+  <target name="ffmpeg" description="Build ffmpeg shared library" depends="init">
+    <fail message="ffmpeg repository not set!" unless="ffmpeg" />
+    <fail message="lame repository not set!" unless="lame" />
+    <fail message="openh264 repository not set!" unless="openh264" />
+
+    <condition property="is.mac.no.openh264">
+      <and>
+        <isset property="is.running.macos"/>
+        <isset property="skipOpenh264"/>
+      </and>
+    </condition>
+    <condition property="is.mac.openh264">
+      <and>
+        <isset property="is.running.macos"/>
+        <not>
+          <isset property="skipOpenh264"/>
+        </not>
+      </and>
+    </condition>
+    <condition property="is.windows.no.openh264">
+      <and>
+        <isset property="is.running.windows"/>
+        <isset property="skipOpenh264"/>
+      </and>
+    </condition>
+    <condition property="is.windows.openh264">
+      <and>
+        <isset property="is.running.windows"/>
+        <not>
+          <isset property="skipOpenh264"/>
+        </not>
+      </and>
+    </condition>
+
+    <cc outtype="shared" name="gcc" outfile="${native_install_dir}/jnffmpeg" objdir="${obj}">
+      <!-- common compiler flags -->
+      <compilerarg value="-D_JNI_IMPLEMENTATION_" />
+      <compilerarg value="-D_XOPEN_SOURCE=600" />
+      <compilerarg value="-I${ffmpeg}" />
+      <compilerarg value="-I${basedir}/src/main/include" />
+      <compilerarg value="-m${arch}" />
+      <compilerarg value="-O2" />
+      <compilerarg value="-std=c99" />
+      <compilerarg value="-Wall" />
+
+      <linkerarg value="-L${ffmpeg}/libavcodec" />
+      <linkerarg value="-L${ffmpeg}/libavfilter" />
+      <linkerarg value="-L${ffmpeg}/libavformat" />
+      <linkerarg value="-L${ffmpeg}/libavutil" />
+      <linkerarg value="-L${ffmpeg}/libswscale" />
+      <!--
+        Depending on the way that lame is built, libmp3lame.a may be in
+        libmp3lame/ or libmp3lame/.libs/.
+      -->
+      <linkerarg value="-L${lame}/libmp3lame" />
+      <linkerarg value="-L${lame}/libmp3lame/.libs" />
+      <linkerarg value="-L${openh264}" />
+      <linkerarg value="-m${arch}" />
+      <linkerarg value="-Wl,-z,relro" if="is.running.debian"/>
+      <!--
+        Static libraries MUST be at the end otherwise they will not be added to
+        the shared library.
+      -->
+      <!--<linkerarg value="-Wl,-Bstatic" location="end" unless="LIBAV"/>-->
+      <linkerarg value="-lavformat" location="end" />
+      <linkerarg value="-lavcodec" location="end" />
+      <linkerarg value="-lavfilter" location="end" />
+      <linkerarg value="-lavutil" location="end" />
+      <linkerarg value="-lswscale" location="end" />
+      <linkerarg value="-lmp3lame" location="end" />
+      <linkerarg value="-lopenh264" location="end" unless="skipOpenh264"/>
+
+      <!-- Unix specific flags -->
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.linux" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/linux" if="is.running.linux" />
+
+      <linkerarg value="-Wl,-Bsymbolic" if="is.running.linux" />
+
+      <!-- Mac OS X specific flags -->
+      <compilerarg value="-mmacosx-version-min=10.4" if="is.running.macos"/>
+      <compilerarg value="-I${java.home}/include" if="is.running.macos" />
+      <compilerarg value="-I${java.home}/include/darwin" if="is.running.macos" />
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.macos" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/darwin" if="is.running.macos" />
+      <compilerarg value="-I/System/Library/Frameworks/JavaVM.framework/Headers" if="is.running.macos" />
+
+      <linkerarg value="-o" location="end" if="is.running.macos" />
+      <linkerarg value="libjnffmpeg-no-openh264.jnilib" location="end" if="is.mac.no.openh264"/>
+      <linkerarg value="libjnffmpeg.jnilib" location="end" if="is.mac.openh264" />
+      <linkerarg value="-dynamiclib" if="is.running.macos" />
+      <!--<linkerarg value="-Wl,-read_only_relocs,suppress" if="is.running.macos" />-->
+
+      <!-- Windows specific flags -->
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.windows" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/win32" if="is.running.windows" />
+      <compilerarg value="-D_WIN32_WINNT=0x0601" if="is.running.windows" />
+      <compilerarg value="-DWINVER=0x0601" if="is.running.windows" />
+
+      <linkerarg value="-ojnffmpeg-no-openh264.dll" if="is.windows.no.openh264" />
+      <linkerarg value="-ojnffmpeg.dll" if="is.windows.openh264" />
+      <linkerarg value="-Wl,--kill-at" if="is.running.windows" />
+      <linkerarg value="-static-libgcc" if="is.running.windows" />
+
+      <fileset file="${src}/main/c/org/jitsi/impl/neomedia/codec/FFmpeg.c" />
+    </cc>
+
+    <antcall target="-update-darwin-ffmpeg-binary">
+      <param name="srcname" value="/usr/local/lib/libopenh264.4.dylib"/>
+      <param name="dstname" value="libopenh264.4.dylib"/>
+    </antcall>
+
+    <delete dir="${obj}" failonerror="false" />
+    <delete file="${native_install_dir}/history.xml" failonerror="false" />
+  </target>
+
+  <target name="-update-darwin-ffmpeg-binary" if="is.running.macos">
+    <exec executable="install_name_tool">
+      <arg value="-change"/>
+      <arg value="${srcname}"/>
+      <arg value="${dstname}"/>
+      <arg value="${native_install_dir}/libjnffmpeg.jnilib"/>
+    </exec>
+  </target>
+
+  <!-- compile jng722 library -->
+  <target name="g722" description="Build jng722 shared library" depends="init">
+    <cc outtype="shared" name="gcc" outfile="${native_install_dir}/jng722" objdir="${obj}">
+      <!-- common compiler flags -->
+      <compilerarg value="-D_JNI_IMPLEMENTATION_" />
+      <compilerarg value="-I${basedir}/src/main/include" />
+      <compilerarg value="-I${basedir}/src/main/include/org/jitsi/impl/neomedia/codec/audio/g722" />
+      <compilerarg value="-O2" />
+      <compilerarg value="-std=c99" />
+      <compilerarg value="-Wall" />
+
+      <!-- Linux specific flags -->
+      <compilerarg value="-m32" if="cross_32" unless="is.running.macos" />
+      <compilerarg value="-m64" if="cross_64" unless="is.running.macos" />
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.linux" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/linux" if="is.running.linux" />
+
+      <linkerarg value="-m32" if="cross_32" unless="is.running.macos" />
+      <linkerarg value="-m64" if="cross_64" unless="is.running.macos" />
+      <linkerarg value="-Wl,-z,relro" if="is.running.debian"/>
+
+      <!-- Mac OS X specific flags -->
+      <compilerarg value="-mmacosx-version-min=10.5" if="is.running.macos"/>
+      <compilerarg value="-arch"  if="is.running.macos" />
+      <compilerarg value="x86_64" if="is.running.macos" />
+      <compilerarg value="-arch" if="is.running.macos" />
+      <compilerarg value="i386" if="is.running.macos" />
+      <!--<compilerarg value="-arch" if="is.running.macos" />-->
+      <!--<compilerarg value="ppc" if="is.running.macos" />-->
+      <compilerarg value="-I/System/Library/Frameworks/JavaVM.framework/Headers" if="is.running.macos" />
+
+      <linkerarg value="-o" location="end" if="is.running.macos" />
+      <linkerarg value="libjng722.jnilib" location="end" if="is.running.macos" />
+      <linkerarg value="-dynamiclib" if="is.running.macos" />
+      <linkerarg value="-arch" if="is.running.macos" />
+      <linkerarg value="x86_64" if="is.running.macos" />
+      <linkerarg value="-arch" if="is.running.macos" />
+      <linkerarg value="i386" if="is.running.macos" />
+      <!--<linkerarg value="-arch" if="is.running.macos" />-->
+      <!--<linkerarg value="ppc" if="is.running.macos" />-->
+
+      <!-- Windows specific flags -->
+      <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.windows" />
+      <compilerarg value="-I${system.JAVA_HOME}/include/win32" if="is.running.windows" />
+
+      <linkerarg value="-ojng722.dll" if="is.running.windows" />
+      <linkerarg value="-Wl,--kill-at" if="is.running.windows" />
+
+      <fileset dir="${src}/main/c/org/jitsi/impl/neomedia/codec/audio/g722" includes="*.c"/>
+    </cc>
+  </target>
+
+  <!-- Cleanup object files and shared libraries -->
+  <target name="clean" description="Clean all object files and libraries.">
+    <delete failonerror="false" includeemptydirs="true">
+        <fileset dir="${obj}" />
+    </delete>
+  </target>
+
+  <!-- Help, print useful targets -->
+  <target name="help">
+    <echo message="Targets available:" />
+    <echo message="'ant ffmpeg' to compile ffmpeg shared library" />
+    <echo message="'ant g722' to compile jng722 shared library" />
+    <echo message="" />
+    <echo message="Options:" />
+    <echo message="-Darch: cross-compile for 32-bit (-Darch=32), 64-bit (-Darch=64) or ppc (-Darch=ppc, Mac OS X only) targets. Windows users have to use gcc >= 4.5." />
+    <echo message="-Dopenh264: path to openh264 directory (ffmpeg JNI compilation)." />
+    <echo message="-Dlame: path to lame directory (ffmpeg JNI compilation)." />
+    <echo message="-Dffmpeg: path to ffmpeg directory (ffmpeg JNI compilation)." />
+    <echo message="" />
+    <echo message="Please note that external libraries such as ffmpeg, openh264, and lame have to be compiled" />
+    <echo message="(follow READMEs in relevant directory) before trying to compile libjnffmpeg"  />
+    <echo message="When compiling libjnffmpeg you have to tell ant script the directory of ffmpeg and openh264 with"  />
+    <echo message="-Dffmpeg=/path/to/ffmpeg and -Dopenh264=/path/to/openh264 -Dlame=/path/to/lame"  />
+  </target>
 </project>

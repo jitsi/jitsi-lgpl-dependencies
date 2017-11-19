@@ -1,7 +1,7 @@
 ﻿Notes 2017-10-07
 ================
 Versions used:
-- FFmpeg 3.3.4
+- FFmpeg 3.4
 - lame 3.99.5
 - openh264 1.7.0.
 
@@ -53,6 +53,9 @@ export PKG_CONFIG_PATH=$OH264
 We need to set of compiled ffmpeg one with and one without libopenh264
 export MP3LAME_HOME=/c/Java/lame-3.99.5
 export OH264=/c/Java/openh264
+
+1) With OpenH264
+
 ./configure \
  --enable-version3 \
  --disable-programs \
@@ -68,21 +71,34 @@ export OH264=/c/Java/openh264
  --extra-cflags="-I$MP3LAME_HOME/include -I$OH264/codec/api" \
  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$OH264"
 
+2) Without OpenH264
+./configure \
+ --enable-version3 \
+ --disable-programs \
+ --disable-doc \
+ --disable-network \
+ --disable-everything \
+ --disable-iconv \
+ --enable-libmp3lame --enable-encoder=libmp3lame \
+ --enable-decoder=mjpeg --enable-parser=mjpeg \
+ --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
+ --extra-cflags="-I$MP3LAME_HOME/include" \
+ --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs"
+
 
 - Windows
-
 x86:
 Add the following to the configure line:
---target-os=mingw32 --enable-memalign-hack --disable-pthreads --enable-w32threads
+--target-os=mingw32
 
 x64:
 Add the following to the configure line used for x86:
---arch=x86_64 --target-os=mingw32 --enable-cross-compile
+--target-os=mingw32 --arch=x86_64 --enable-cross-compile
 
 - FreeBSD, Linux
 
 Add the following to the configure line:
---enable-pic --enable-pthreads --enable-decoder=mjpeg --enable-parser=mjpeg
+--enable-pic
 
 - Mac OS X
 

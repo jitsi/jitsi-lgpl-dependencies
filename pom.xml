@@ -20,6 +20,14 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+            <source>1.8</source>
+            <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
          <groupId>org.apache.felix</groupId>
          <artifactId>maven-bundle-plugin</artifactId>
          <configuration>
@@ -27,14 +35,16 @@
                <Export-Package></Export-Package>
                <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
                <Bundle-NativeCode>
-                darwin/libjnffmpeg.jnilib;osname=Mac OS X;processor=x86-64,
                 darwin/libjng722.jnilib;osname=Mac OS X;processor=x86-64,
+                darwin/libjnffmpeg.jnilib;osname=Mac OS X;processor=x86-64,
+                darwin/libjnffmpeg-no-openh264.jnilib;osname=Mac OS X;processor=x86-64,
                 linux-x86/libjng722.so;osname=Linux;processor=x86,
                 linux-x86-64/libjng722.so;osname=Linux;processor=x86-64,
                 win32-x86/jng722.dll;osname=Win32;processor=x86,
                 win32-x86/jnffmpeg.dll;osname=Win32;processor=x86,
                 win32-x86-64/jng722.dll;osname=Win32;processor=x86-64,
-                win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64
+                win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64,
+                win32-x86-64/jnffmpeg-no-openh264.dll;osname=Win32;processor=x86-64
                </Bundle-NativeCode>
             </instructions>
          </configuration>
