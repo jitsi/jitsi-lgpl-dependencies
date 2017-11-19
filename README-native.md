@@ -116,7 +116,14 @@ make
 make
 ```
 
-On Linux, add the following to the configure line:
+#### Windows
+Make sure that pthreads are not used. It might be necessary to append
+`--enable-w32threads --disable-pthreads`. The configure script might also
+detect `nanosleep` and `clock_gettime`, manually disable those in `config.h`
+by setting `HAVE_CLOCK_GETTIME` and `HAVE_NANOSLEEP` to `0`.
+
+#### Linux
+Add the following to the configure line:
 `--enable-pic`
 
 
@@ -127,8 +134,8 @@ export FFMPEG_HOME_NO_OPENH264=/Users/dminkov/dev/ffmpeg/ffmpeg-3.3.4
 export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
 export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
 
-ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=.
-ant ffmpeg -Dffmpeg=$FFMPEG_HOME_NO_OPENH264 -Dlame=$MP3LAME_HOME -Dopenh264=$OH264 -DskipOpenh264=true
+ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=. -Darch=32
+ant ffmpeg -Dffmpeg=$FFMPEG_HOME_NO_OPENH264 -Dlame=$MP3LAME_HOME -Dopenh264=$OH264 -DskipOpenh264=true -Darch=32
 ```
 
 Define the environment variable JAVA_HOME so that the JNI headers can be found.
