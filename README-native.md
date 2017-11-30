@@ -4,7 +4,7 @@
 Versions
 --------
 - FFmpeg 3.4
-- lame 3.99.5
+- lame 3.99.5/lame-3.100
 - openh264 1.7.0.
 
 Prerequisites
@@ -27,7 +27,7 @@ Copy `<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-gcc-ar.exe` to
 `<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-ar.exe`
 
 ### OS X
-- [nasm](http://www.nasm.us/pub/nasm/releasebuilds/2.11.06/macosx/nasm-2.11.06-macosx.zip)
+- [nasm](http://www.nasm.us/pub/nasm/releasebuilds/2.13/macosx/nasm-2.13-macosx.zip)
 - `brew install pkg-config`
 
 
@@ -48,6 +48,7 @@ make
 FFmpeg looks for `lame.h` as `lame/lame.h` but the installed lame-3.99.5 does not
 have the lame directory so go into lame-3.99.5/include and `ln -s . lame` on
 Linux and Mac OS X or `mklink /d lame .` on Windows.
+(instructions above not needed for lame-3.100)
 
 For x86, `export CFLAGS=-msse` to enable the SSE intrinsics. See Lame#443 for
 details: https://sourceforge.net/p/lame/bugs/443/
@@ -65,7 +66,6 @@ x64:
 ```
 make install
 cd openh264-1.7.0/codec/api
-ln -s svc wels
 export PKG_CONFIG_PATH=$OH264
 ```
 
@@ -129,13 +129,15 @@ Add the following to the configure line:
 
 ### jnffmpeg
 ```
-export FFMPEG_HOME=/Users/dminkov/dev/ffmpeg/ffmpeg-3.3.4
-export FFMPEG_HOME_NO_OPENH264=/Users/dminkov/dev/ffmpeg/ffmpeg-3.3.4
+export FFMPEG_HOME=/Users/dminkov/dev/ffmpeg/ffmpeg-3.4
+export FFMPEG_HOME_NO_OPENH264=/Users/dminkov/dev/ffmpeg/ffmpeg-3.4-no-openh264
 export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
 export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
 
-ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=. -Darch=32
-ant ffmpeg -Dffmpeg=$FFMPEG_HOME_NO_OPENH264 -Dlame=$MP3LAME_HOME -Dopenh264=$OH264 -DskipOpenh264=true -Darch=32
+ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=$OH264
+# -Darch=32
+ant ffmpeg -Dffmpeg=$FFMPEG_HOME_NO_OPENH264 -Dlame=$MP3LAME_HOME -DskipOpenh264=true 
+# -Darch=32
 ```
 
 Define the environment variable JAVA_HOME so that the JNI headers can be found.

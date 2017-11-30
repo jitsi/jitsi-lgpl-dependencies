@@ -224,6 +224,8 @@
       <linkerarg value="libjnffmpeg.jnilib" location="end" if="is.mac.openh264" />
       <linkerarg value="-dynamiclib" if="is.running.macos" />
       <!--<linkerarg value="-Wl,-read_only_relocs,suppress" if="is.running.macos" />-->
+      <linkerarg value="-framework" if="is.running.macos" />
+      <linkerarg value="CoreVideo" if="is.running.macos" />
 
       <!-- Windows specific flags -->
       <compilerarg value="-I${system.JAVA_HOME}/include" if="is.running.windows" />
