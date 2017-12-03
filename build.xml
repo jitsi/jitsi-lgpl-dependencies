@@ -243,7 +243,7 @@
 
     <antcall target="-update-darwin-ffmpeg-binary">
       <param name="srcname" value="/usr/local/lib/libopenh264.4.dylib"/>
-      <param name="dstname" value="libopenh264.4.dylib"/>
+      <param name="dstname" value="/Users/Shared/Library/Application Support/Jitsi/native/libopenh264.4.dylib"/>
     </antcall>
 
     <delete dir="${obj}" failonerror="false" />
