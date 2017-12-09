@@ -232,11 +232,16 @@ public class FFmpeg
 
     static
     {
-        try
+        String osName = System.getProperty("os.name");
+        if (!osName.startsWith("Linux"))
         {
-            System.loadLibrary("libopenh264");
+            try
+            {
+                System.loadLibrary("libopenh264");
+            }
+            catch (Throwable t){}
         }
-        catch (Throwable t){}
+
         boolean jnffmpegLoaded = false;
         try
         {
@@ -250,7 +255,7 @@ public class FFmpeg
         }
         try
         {
-            if (!jnffmpegLoaded)
+            if (!jnffmpegLoaded && !osName.startsWith("Linux"))
                 JNIUtils.loadLibrary(
                     "jnffmpeg-no-openh264", FFmpeg.class.getClassLoader());
         }
