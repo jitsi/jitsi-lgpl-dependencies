@@ -91,7 +91,7 @@ export OH264=/c/Java/openh264
  --enable-parser=h264 \
  --enable-libopenh264 --enable-encoder=libopenh264 --enable-decoder=libopenh264 \
  --enable-decoder=mjpeg --enable-parser=mjpeg \
- --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
+ --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink --enable-filter=format \
  --extra-cflags="-I$MP3LAME_HOME/include -I$OH264/codec/api" \
  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs -L$OH264"
 
@@ -109,7 +109,7 @@ make
  --disable-iconv \
  --enable-libmp3lame --enable-encoder=libmp3lame \
  --enable-decoder=mjpeg --enable-parser=mjpeg \
- --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink \
+ --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink --enable-filter=format \
  --extra-cflags="-I$MP3LAME_HOME/include" \
  --extra-ldflags="-L$MP3LAME_HOME/libmp3lame -L$MP3LAME_HOME/libmp3lame/.libs"
 
