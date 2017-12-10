@@ -17,11 +17,14 @@ Prerequisites
   - make
   - diffutils
   - yasm
-  - mingw-w64-i686-gcc
-  - mingw-w64-x86_64-gcc
-  - pkg-config
   - git
   - nasm
+  - mingw-w64-i686-toolchain
+  - mingw-w64-i686-cmake
+  - mingw-w64-i686-pkg-config
+  - mingw-w64-x86_64-toolchain
+  - mingw-w64-x86_64-cmake
+  - mingw-w64-x86_64-pkg-config
 
 Copy `<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-gcc-ar.exe` to
 `<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-ar.exe`
@@ -40,7 +43,7 @@ Libraries
     --disable-shared --enable-static \
     --enable-nasm \
     --disable-analyzer-hooks --disable-decoder --disable-frontend \
-    --with-pic -msse
+    --with-pic
 
 make
 ```

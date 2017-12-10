@@ -172,7 +172,6 @@
       <compilerarg value="-D_JNI_IMPLEMENTATION_" />
       <compilerarg value="-D_XOPEN_SOURCE=600" />
       <compilerarg value="-I${ffmpeg}" />
-      <compilerarg value="-I${basedir}/src/main/include" />
       <compilerarg value="-m${arch}" />
       <compilerarg value="-O2" />
       <compilerarg value="-std=c99" />
@@ -183,12 +182,6 @@
       <linkerarg value="-L${ffmpeg}/libavformat" />
       <linkerarg value="-L${ffmpeg}/libavutil" />
       <linkerarg value="-L${ffmpeg}/libswscale" />
-      <!--
-        Depending on the way that lame is built, libmp3lame.a may be in
-        libmp3lame/ or libmp3lame/.libs/.
-      -->
-      <linkerarg value="-L${lame}/libmp3lame" />
-      <linkerarg value="-L${lame}/libmp3lame/.libs" />
       <linkerarg value="-L${openh264}" />
       <linkerarg value="-m${arch}" />
       <linkerarg value="-Wl,-z,relro" if="is.running.debian"/>
@@ -202,7 +195,6 @@
       <linkerarg value="-lavfilter" location="end" />
       <linkerarg value="-lavutil" location="end" />
       <linkerarg value="-lswscale" location="end" />
-      <linkerarg value="-lmp3lame" location="end" />
       <linkerarg value="-lopenh264" location="end" unless="skipOpenh264"/>
 
       <!-- Unix specific flags -->
@@ -238,7 +230,7 @@
       <linkerarg value="-Wl,--kill-at" if="is.running.windows" />
       <linkerarg value="-static-libgcc" if="is.running.windows" />
 
-      <fileset file="${src}/main/c/org/jitsi/impl/neomedia/codec/FFmpeg.c" />
+      <fileset file="${src}/main/c/ffmpeg/FFmpeg.c" />
     </cc>
 
     <antcall target="-update-darwin-ffmpeg-binary">
@@ -264,8 +256,6 @@
     <cc outtype="shared" name="gcc" outfile="${native_install_dir}/jng722" objdir="${obj}">
       <!-- common compiler flags -->
       <compilerarg value="-D_JNI_IMPLEMENTATION_" />
-      <compilerarg value="-I${basedir}/src/main/include" />
-      <compilerarg value="-I${basedir}/src/main/include/org/jitsi/impl/neomedia/codec/audio/g722" />
       <compilerarg value="-O2" />
       <compilerarg value="-std=c99" />
       <compilerarg value="-Wall" />
@@ -307,7 +297,7 @@
       <linkerarg value="-ojng722.dll" if="is.running.windows" />
       <linkerarg value="-Wl,--kill-at" if="is.running.windows" />
 
-      <fileset dir="${src}/main/c/org/jitsi/impl/neomedia/codec/audio/g722" includes="*.c"/>
+      <fileset dir="${src}/main/c/g722" includes="*.c"/>
     </cc>
   </target>
 

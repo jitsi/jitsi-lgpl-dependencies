@@ -4,7 +4,7 @@
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
-#include "org/jitsi/impl/neomedia/codec/FFmpeg.h"
+#include "FFmpeg.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -625,7 +625,12 @@ JNIEXPORT jlong JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_avfilter_1graph_1alloc
     (JNIEnv *env, jclass clazz)
 {
-    return (jlong) (intptr_t) avfilter_graph_alloc();
+    AVFilterGraph* graph = avfilter_graph_alloc();
+    if (graph) {
+        avfilter_graph_set_auto_convert(graph, AVFILTER_AUTO_CONVERT_NONE );
+    }
+
+    return (jlong) (intptr_t) graph;
 }
 
 JNIEXPORT jint JNICALL
