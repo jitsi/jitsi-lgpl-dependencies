@@ -9,6 +9,7 @@ include_directories(
 )
 
 link_directories(
+        ${libmp3lame_LIBRARY_DIRS}
         ${LIBOPENH264_LIBRARY_DIRS}
         ${FFMPEG_OH264_LIBRARY_DIRS}
 )
@@ -21,6 +22,7 @@ target_link_libraries(${PROJECT_NAME}
         avfilter
         avutil
         swscale
+        mp3lame
         openh264.dll
 )
 
@@ -33,6 +35,10 @@ if(NOT APPLE)
 endif()
 
 if(WIN32)
+    target_link_libraries(${PROJECT_NAME}
+            -static-libgcc
+            -static-libstdc++
+            -Wl,--kill-at)
     set_target_properties(${PROJECT_NAME} PROPERTIES
             OUTPUT_NAME "jnffmpeg"
             PREFIX "")

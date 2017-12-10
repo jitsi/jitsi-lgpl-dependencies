@@ -9,6 +9,7 @@ include_directories(
 )
 
 link_directories(
+        ${libmp3lame_LIBRARY_DIRS}
         ${FFMPEG_LIBRARY_DIRS}
 )
 
@@ -20,6 +21,7 @@ target_link_libraries(${PROJECT_NAME}
         avfilter
         avutil
         swscale
+        mp3lame
 )
 
 if(UNIX)
@@ -47,6 +49,10 @@ if(NOT APPLE)
 endif()
 
 if(WIN32)
+    target_link_libraries(${PROJECT_NAME}
+            -static-libgcc
+            -static-libstdc++
+            -Wl,--kill-at)
     set_target_properties(${PROJECT_NAME} PROPERTIES
             OUTPUT_NAME "jnffmpeg-no-openh264"
             PREFIX "")
