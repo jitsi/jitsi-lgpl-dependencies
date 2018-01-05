@@ -136,7 +136,6 @@
   <target name="ffmpeg" description="Build ffmpeg shared library" depends="init">
     <fail message="ffmpeg repository not set!" unless="ffmpeg" />
     <fail message="lame repository not set!" unless="lame" />
-    <fail message="openh264 repository not set!" unless="openh264" />
 
     <condition property="is.mac.no.openh264">
       <and>
@@ -166,6 +165,7 @@
         </not>
       </and>
     </condition>
+    <fail message="openh264 repository not set!" unless="openh264" if="is.mac.openh264" />
 
     <cc outtype="shared" name="gcc" outfile="${native_install_dir}/jnffmpeg" objdir="${obj}">
       <!-- common compiler flags -->
@@ -182,6 +182,8 @@
       <linkerarg value="-L${ffmpeg}/libavformat" />
       <linkerarg value="-L${ffmpeg}/libavutil" />
       <linkerarg value="-L${ffmpeg}/libswscale" />
+      <linkerarg value="-L${lame}/libmp3lame" if="is.running.macos" />
+      <linkerarg value="-L${lame}/libmp3lame/.libs" if="is.running.macos" />
       <linkerarg value="-L${openh264}" />
       <linkerarg value="-m${arch}" />
       <linkerarg value="-Wl,-z,relro" if="is.running.debian"/>
@@ -195,6 +197,7 @@
       <linkerarg value="-lavfilter" location="end" />
       <linkerarg value="-lavutil" location="end" />
       <linkerarg value="-lswscale" location="end" />
+      <linkerarg value="-lmp3lame" location="end" if="is.running.macos" />
       <linkerarg value="-lopenh264" location="end" unless="skipOpenh264"/>
 
       <!-- Unix specific flags -->
