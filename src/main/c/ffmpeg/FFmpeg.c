@@ -20,6 +20,18 @@
 #include <libavfilter/buffersrc.h>
 #include <libswscale/swscale.h>
 
+// for libavfilter5
+#ifndef AVFILTER_AUTO_CONVERT_NONE
+enum {
+    AVFILTER_AUTO_CONVERT_NONE = -1 /**< all automatic conversions disabled */
+};
+#endif
+
+// libavutil54
+#ifndef AV_ERROR_MAX_STRING_SIZE
+#define AV_ERROR_MAX_STRING_SIZE 64
+#endif
+
 #define DEFINE_AVCODECCONTEXT_F_PROPERTY_SETTER(name, property) \
     JNIEXPORT void JNICALL \
     Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1##name \
