@@ -26,6 +26,12 @@ public class FFmpeg
     public static final int AV_NUM_DATA_POINTERS = 8;
 
     /**
+     *  Audio channel masks.
+     */
+    public static final int AV_CH_LAYOUT_STEREO = 3;
+    public static final int AV_CH_LAYOUT_MONO = 4;
+
+    /**
      * The AV sample format for signed 16.
      */
     public static final int AV_SAMPLE_FMT_S16 = 1;
@@ -255,14 +261,24 @@ public class FFmpeg
         }
         try
         {
-            if (!jnffmpegLoaded && !osName.startsWith("Linux"))
-                JNIUtils.loadLibrary(
-                    "jnffmpeg-no-openh264", FFmpeg.class.getClassLoader());
+            if (!jnffmpegLoaded)
+            {
+                if(osName.startsWith("Linux"))
+                {
+                    // if its not loaded and it is Linux, we may be on a
+                    // distribution using the -ffmpeg libraries
+                    JNIUtils.loadLibrary(
+                        "jnffmpeg-ffmpeg", FFmpeg.class.getClassLoader());
+                }
+                else
+                {
+                    JNIUtils.loadLibrary(
+                        "jnffmpeg-no-openh264", FFmpeg.class.getClassLoader());
+                }
+            }
         }
         catch (Throwable t)
         {
-            // TODO remove stacktrace print
-            t.printStackTrace();
             throw t;
         }
 

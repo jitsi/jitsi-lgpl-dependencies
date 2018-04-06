@@ -24,22 +24,6 @@ target_link_libraries(${PROJECT_NAME}
         mp3lame
 )
 
-if(UNIX)
-    macro(patchelf SOURCE TARGET)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND "patchelf"
-                ARGS --replace-needed ${SOURCE} ${TARGET} $<TARGET_FILE:${PROJECT_NAME}>
-                COMMENT "Running patchelf for ${SOURCE}"
-                )
-    endmacro()
-
-    patchelf(libavformat-ffmpeg.so.56 libavformat.so)
-    patchelf(libavcodec-ffmpeg.so.56 libavcodec.so)
-    patchelf(libavfilter-ffmpeg.so.5 libavfilter.so)
-    patchelf(libavutil-ffmpeg.so.54 libavutil.so)
-    patchelf(libswscale-ffmpeg.so.3 libswscale.so)
-endif()
-
 if(NOT APPLE)
     if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
         set(arch -x86-64)
