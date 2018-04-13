@@ -249,6 +249,7 @@ public class FFmpeg
         }
 
         boolean jnffmpegLoaded = false;
+        Throwable firstPassLoadingFfmpegError = null;
         try
         {
             JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
@@ -256,8 +257,7 @@ public class FFmpeg
         }
         catch (Throwable t)
         {
-            // TODO remove stacktrace print
-            t.printStackTrace();
+            firstPassLoadingFfmpegError = t;
         }
         try
         {
@@ -279,6 +279,12 @@ public class FFmpeg
         }
         catch (Throwable t)
         {
+            // if nothing loads print all the errors we have
+            if (firstPassLoadingFfmpegError != null)
+            {
+                firstPassLoadingFfmpegError.printStackTrace();
+            }
+            t.printStackTrace();
             throw t;
         }
 
