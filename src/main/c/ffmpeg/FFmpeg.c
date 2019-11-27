@@ -20,13 +20,6 @@
 #include <libavfilter/buffersrc.h>
 #include <libswscale/swscale.h>
 
-// for libavfilter5
-#ifndef AVFILTER_AUTO_CONVERT_NONE
-enum {
-    AVFILTER_AUTO_CONVERT_NONE = -1 /**< all automatic conversions disabled */
-};
-#endif
-
 // libavutil54
 #ifndef AV_ERROR_MAX_STRING_SIZE
 #define AV_ERROR_MAX_STRING_SIZE 64
@@ -639,7 +632,7 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avfilter_1graph_1alloc
 {
     AVFilterGraph* graph = avfilter_graph_alloc();
     if (graph) {
-        avfilter_graph_set_auto_convert(graph, AVFILTER_AUTO_CONVERT_NONE );
+        avfilter_graph_set_auto_convert(graph, -1); /* -1 = AVFILTER_AUTO_CONVERT_NONE */
     }
 
     return (jlong) (intptr_t) graph;
