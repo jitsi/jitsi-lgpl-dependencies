@@ -15,7 +15,9 @@
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
+#if LIBAVFILTER_VERSION_INT < AV_VERSION_INT(3,8,0)
 #include <libavfilter/avfiltergraph.h>
+#endif
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libswscale/swscale.h>
@@ -539,7 +541,9 @@ DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(keyint_1min, keyint_min)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(max_1b_1frames, max_b_frames)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(mb_1decision, mb_decision)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1cmp, me_cmp)
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1method, me_method)
+#endif
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1range, me_range)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1subpel_1quality, me_subpel_quality)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(pix_1fmt, pix_fmt)
@@ -565,6 +569,7 @@ JNIEXPORT void JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1eq
     (JNIEnv *env, jclass clazz, jlong ctx, jstring rc_eq)
 {
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
     char *s;
 
     if (rc_eq)
@@ -586,6 +591,7 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1eq
         s = NULL;
     }
     ((AVCodecContext *) (intptr_t) ctx)->rc_eq = s;
+#endif
 }
 
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rc_1max_1rate, rc_max_rate)
