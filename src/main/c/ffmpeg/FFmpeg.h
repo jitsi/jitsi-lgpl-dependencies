@@ -301,7 +301,7 @@ JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_
  */
 JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1me_1cmp
   (JNIEnv *, jclass, jlong, jint);
-
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
 /*
  * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
  * Method:    avcodeccontext_set_me_method
@@ -309,7 +309,7 @@ JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_
  */
 JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1me_1method
   (JNIEnv *, jclass, jlong, jint);
-
+#endif
 /*
  * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
  * Method:    avcodeccontext_set_me_range
@@ -365,7 +365,7 @@ JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_
  */
 JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1buffer_1size
   (JNIEnv *, jclass, jlong, jint);
-
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
 /*
  * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
  * Method:    avcodeccontext_set_rc_eq
@@ -373,7 +373,7 @@ JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_
  */
 JNIEXPORT void JNICALL Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1eq
   (JNIEnv *, jclass, jlong, jstring);
-
+#endif
 /*
  * Class:     org_jitsi_impl_neomedia_codec_FFmpeg
  * Method:    avcodeccontext_set_rc_max_rate
