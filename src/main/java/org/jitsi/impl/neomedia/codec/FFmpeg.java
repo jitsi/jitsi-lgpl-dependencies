@@ -84,22 +84,22 @@ public class FFmpeg
     /**
      * H263 codec ID.
      */
-    public static final int CODEC_ID_H263 = 5;
+    public static final int CODEC_ID_H263 = 4;
 
     /**
      * H263+ codec ID.
      */
-    public static final int CODEC_ID_H263P = 20;
+    public static final int CODEC_ID_H263P = 19;
 
     /**
      * H264 codec ID.
      */
-    public static final int CODEC_ID_H264 = 28;
+    public static final int CODEC_ID_H264 = 27;
 
     /**
      * MJPEG codec ID.
      */
-    public static final int CODEC_ID_MJPEG = 8;
+    public static final int CODEC_ID_MJPEG = 7;
 
     /**
      * MP3 codec ID.
@@ -109,7 +109,7 @@ public class FFmpeg
     /**
      * VP8 codec ID
      */
-    public static final int CODEC_ID_VP8 = 142;
+    public static final int CODEC_ID_VP8 = 139;
 
     /**
      * Work around bugs in encoders which sometimes cannot be detected
