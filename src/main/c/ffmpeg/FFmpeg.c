@@ -565,11 +565,11 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1quantizer
 
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rc_1buffer_1size, rc_buffer_size)
 
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
 JNIEXPORT void JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1eq
     (JNIEnv *env, jclass clazz, jlong ctx, jstring rc_eq)
 {
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
     char *s;
 
     if (rc_eq)
@@ -591,8 +591,8 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1eq
         s = NULL;
     }
     ((AVCodecContext *) (intptr_t) ctx)->rc_eq = s;
-#endif
 }
+#endif
 
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rc_1max_1rate, rc_max_rate)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(refs, refs)
