@@ -47,16 +47,6 @@ public class FFmpeg
     public static final int CODEC_FLAG_AC_PRED = 0x02000000;
 
     /**
-     * H263+ slice struct flag.
-     */
-    public static final int CODEC_FLAG_H263P_SLICE_STRUCT = 0x10000000;
-
-    /**
-     * H263+ UMV flag.
-     */
-    public static final int CODEC_FLAG_H263P_UMV = 0x01000000 ;
-
-    /**
      * Loop filter flag.
      */
     public static final int CODEC_FLAG_LOOP_FILTER = 0x00000800;
@@ -80,16 +70,6 @@ public class FFmpeg
      * AMR-WB codec ID
      */
     public static final int CODEC_ID_AMR_WB = CODEC_ID_AMR_NB + 1;
-
-    /**
-     * H263 codec ID.
-     */
-    public static final int CODEC_ID_H263 = 5;
-
-    /**
-     * H263+ codec ID.
-     */
-    public static final int CODEC_ID_H263P = 20;
 
     /**
      * H264 codec ID.
@@ -584,7 +564,7 @@ public class FFmpeg
 
     /**
      * Sets the maximum number of pictures in a group of pictures i.e. the
-     * maximum interval between keyframes. 
+     * maximum interval between keyframes.
      *
      * @param ctx the <tt>AVCodecContext</tt> to set the <tt>gop_size</tt> of
      * @param gop_size the maximum number of pictures in a group of pictures
