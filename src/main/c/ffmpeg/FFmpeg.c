@@ -541,9 +541,6 @@ DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(keyint_1min, keyint_min)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(max_1b_1frames, max_b_frames)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(mb_1decision, mb_decision)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1cmp, me_cmp)
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
-DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1method, me_method)
-#endif
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1range, me_range)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1subpel_1quality, me_subpel_quality)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(pix_1fmt, pix_fmt)
@@ -564,36 +561,6 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1quantizer
 }
 
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rc_1buffer_1size, rc_buffer_size)
-
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,0,0)
-JNIEXPORT void JNICALL
-Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1eq
-    (JNIEnv *env, jclass clazz, jlong ctx, jstring rc_eq)
-{
-    char *s;
-
-    if (rc_eq)
-    {
-        const char *js = (*env)->GetStringUTFChars(env, rc_eq, NULL);
-
-        if (js)
-        {
-            s = av_strdup(js);
-            (*env)->ReleaseStringUTFChars(env, rc_eq, js);
-        }
-        else
-        {
-            s = NULL;
-        }
-    }
-    else
-    {
-        s = NULL;
-    }
-    ((AVCodecContext *) (intptr_t) ctx)->rc_eq = s;
-}
-#endif
-
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rc_1max_1rate, rc_max_rate)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(refs, refs)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rtp_1payload_1size, rtp_payload_size)
