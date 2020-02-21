@@ -6,7 +6,7 @@
  */
 package org.jitsi.impl.neomedia.codec;
 
-import org.jitsi.util.*;
+import org.jitsi.utils.*;
 
 import java.nio.*;
 
@@ -232,7 +232,7 @@ public class FFmpeg
         Throwable firstPassLoadingFfmpegError = null;
         try
         {
-            JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class.getClassLoader());
+            JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class);
             jnffmpegLoaded = true;
         }
         catch (Throwable t)
@@ -247,13 +247,11 @@ public class FFmpeg
                 {
                     // if its not loaded and it is Linux, we may be on a
                     // distribution using the -ffmpeg libraries
-                    JNIUtils.loadLibrary(
-                        "jnffmpeg-ffmpeg", FFmpeg.class.getClassLoader());
+                    JNIUtils.loadLibrary("jnffmpeg-ffmpeg", FFmpeg.class);
                 }
                 else
                 {
-                    JNIUtils.loadLibrary(
-                        "jnffmpeg-no-openh264", FFmpeg.class.getClassLoader());
+                    JNIUtils.loadLibrary("jnffmpeg-no-openh264", FFmpeg.class);
                 }
             }
         }
