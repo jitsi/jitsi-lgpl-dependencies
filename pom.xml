@@ -68,6 +68,11 @@
       <artifactId>jna</artifactId>
       <version>4.1.0</version>
     </dependency>
+  <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>jitsi-utils</artifactId>
+      <version>1.0-39-gd481c98</version>
+  </dependency>
   </dependencies>
 
   <repositories>

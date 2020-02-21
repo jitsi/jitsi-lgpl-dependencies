@@ -6,7 +6,7 @@
  */
 package org.jitsi.impl.neomedia.codec.audio.g722;
 
-import org.jitsi.util.*;
+import org.jitsi.utils.*;
 
 /**
  *
@@ -16,7 +16,7 @@ public class JNIEncoder
 {
     static
     {
-        JNIUtils.loadLibrary("jng722", JNIEncoder.class.getClassLoader());
+        JNIUtils.loadLibrary("jng722", JNIEncoder.class);
     }
 
     public static native void g722_encoder_close(long encoder);
