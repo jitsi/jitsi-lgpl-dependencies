@@ -481,7 +481,8 @@ public class FFmpeg
 
     /**
      * Gets the samples per packet of the specified <tt>AVCodecContext</tt>. The
-     * property is set by libavcodec upon {@link #avcodec_open(long, long)}.
+     * property is set by libavcodec upon
+     * {@link #avcodec_open2(long, long, String...)}.
      *
      * @param ctx the <tt>AVCodecContext</tt> to get the samples per packet of
      * @return the samples per packet of the specified <tt>AVCodecContext</tt>
