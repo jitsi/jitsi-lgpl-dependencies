@@ -4,7 +4,7 @@
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
-#include "org/jitsi/impl/neomedia/codec/audio/g722/JNIEncoder.h"
+#include "JNIEncoder.h"
 
 #include <inttypes.h>
 
