@@ -10,21 +10,53 @@
   <packaging>bundle</packaging>
 
   <name>jitsi-lgpl-dependencies</name>
-  <url>https://github.com/jitsi/jitsi-lgpl-dependencies/</url>
+  <description>
+    This is a submodule of libjitsi that encapsulates references to
+    external LGPL licensed libraries.
+  </description>
+  <url>https://github.com/jitsi/jitsi-lgpl-dependencies</url>
+
+  <organization>
+    <name>jitsi.org</name>
+    <url>https://jitsi.org</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <id>org.jitsi</id>
+      <name>Jitsi Team</name>
+      <email>dev@jitsi.org</email>
+    </developer>
+  </developers>
+
+  <scm>
+    <url>https://github.com/jitsi/jitsi-lgpl-dependencies</url>
+    <connection>scm:git:https://github.com/jitsi/jitsi-lgpl-dependencies.git</connection>
+    <developerConnection>scm:git:https://github.com/jitsi/jitsi-lgpl-dependencies.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>LGPL-2.1-only</name>
+      <url>https://github.com/jitsi/jitsi-lgpl-dependencies/blob/master/LICENSE</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-    <build>
+  <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.5.1</version>
+        <version>3.8.1</version>
         <configuration>
-            <source>1.7</source>
-            <target>1.7</target>
+            <source>1.8</source>
+            <target>1.8</target>
             <compilerArgs>
                 <arg>-Xlint:all</arg>
             </compilerArgs>
@@ -33,12 +65,13 @@
       <plugin>
          <groupId>org.apache.felix</groupId>
          <artifactId>maven-bundle-plugin</artifactId>
-         <version>3.0.1</version>
+         <version>5.1.1</version>
          <extensions>true</extensions>
           <configuration>
             <instructions>
                <Export-Package></Export-Package>
                <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
+               <_noclassforname>true</_noclassforname>
                <Bundle-NativeCode>
                 darwin/libjng722.jnilib;osname=Mac OS X;processor=x86-64,
                 darwin/libjnffmpeg.jnilib;osname=Mac OS X;processor=x86-64,
@@ -54,51 +87,95 @@
             </instructions>
          </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <doclint>-missing</doclint>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.8.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.8</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
     </plugins>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-    </resources>
   </build>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <activation>
+        <property>
+          <name>release</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
-      <version>4.1.0</version>
+      <version>5.6.0</version>
     </dependency>
-  <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>jitsi-utils</artifactId>
-      <version>1.0-39-gd481c98</version>
-  </dependency>
+    <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>jitsi-utils</artifactId>
+        <version>v1.0-66-g9f2339f</version>
+    </dependency>
   </dependencies>
 
-  <repositories>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
     <repository>
-      <id>jitsi-maven-repository-releases</id>
-      <layout>default</layout>
-      <name>Jitsi Maven Repository (Releases)</name>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <url>https://github.com/jitsi/jitsi-maven-repository/raw/master/releases/</url>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
-    <repository>
-      <id>jitsi-maven-repository-snapshots</id>
-      <layout>default</layout>
-      <name>Jitsi Maven Repository (Snapshots)</name>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <url>https://github.com/jitsi/jitsi-maven-repository/raw/master/snapshots/</url>
-    </repository>
-  </repositories>
+  </distributionManagement>
 </project>
