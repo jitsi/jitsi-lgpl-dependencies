@@ -84,6 +84,8 @@
                 win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64,
                 win32-x86-64/jnffmpeg-no-openh264.dll;osname=Win32;processor=x86-64
                </Bundle-NativeCode>
+              <!-- Prevent importing a specific version. -->
+              <Import-Package>*;version=!</Import-Package>
             </instructions>
          </configuration>
       </plugin>
@@ -164,7 +166,7 @@
     <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>jitsi-utils</artifactId>
-        <version>v1.0-66-g9f2339f</version>
+        <version>1.0-67-g4032ab6</version>
     </dependency>
   </dependencies>
 
