@@ -1,0 +1,406 @@
+name: Java and Natives
+
+on: [ push, pull_request ]
+
+env:
+  # Java version to use for the release
+  RELEASE_JAVA_VERSION: 8
+
+jobs:
+  version:
+    name: Prepare version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      deb_version: ${{ steps.version.outputs.deb_version }}
+      create_tag: ${{ steps.version.outputs.create_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.RELEASE_JAVA_VERSION }}
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Parse and set version
+        id: version
+        run: |
+          MVNVER=`mvn help:evaluate -Dexpression=project.version -q -DforceStdout`
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            TAG_NAME="v${MVNVER/-SNAPSHOT/}"
+            if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1
+            then
+              echo "Creating tag $TAG_NAME"
+              git config --local user.name "$GITHUB_ACTOR via GitHub Action"
+              git config --local user.email "action@github.com"
+              git tag -a "$TAG_NAME" -m "Tagged automatically by GitHub Action ${{ github.workflow }}"
+              echo "::set-output name=create_tag::true"
+            else
+              echo "Tag: $TAG_NAME already exists"
+              echo "::set-output name=create_tag::false"
+            fi
+            VERSION=`git describe --match "v[0-9\.]*" --long --always`
+            VERSION=${VERSION:1}
+            DEB_VERSION=${VERSION//-/.}~${{ matrix.dist }}
+          else
+            echo "Not on master"
+            echo "::set-output name=create_tag::false"
+            BRANCH=${GITHUB_REF#refs/heads/}
+            VERSION=${MVNVER/-SNAPSHOT/}
+            VERSION=${VERSION/-$BRANCH/}
+            # this may well be what it was before...
+            VERSION=$VERSION-$BRANCH-SNAPSHOT
+            DEB_VERSION=${VERSION//-/.}$(date -u +%s%3N)
+          fi
+          echo "Version: $VERSION"
+          echo "::set-output name=version::${VERSION}"
+          echo "::set-output name=deb_version::${DEB_VERSION}"
+
+  javatest:
+    name: Java ${{ matrix.java }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 8, 11 ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build and test with Maven
+        run: mvn -B verify -DperformRelease=true
+
+  deb:
+    runs-on: ubuntu-latest
+    needs: [ version, javatest ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          { vendor: ubuntu, dist: bionic, arch: i386 },
+          { vendor: ubuntu, dist: bionic, arch: amd64 },
+          { vendor: ubuntu, dist: focal, arch: amd64 },
+          { vendor: ubuntu, dist: groovy, arch: amd64 },
+          { vendor: debian, dist: buster, arch: i386 },
+          { vendor: debian, dist: buster, arch: amd64 },
+        ]
+
+    name: ${{ matrix.dist }} ${{ matrix.arch }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.RELEASE_JAVA_VERSION }}
+          java-package: jdk
+
+      - name: Set Maven package version
+        run: |
+          mvn -B versions:set -DnewVersion=${{ needs.version.outputs.version }} -DgenerateBackupPoms=false
+
+      - name: Install dev packages
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y binutils ubuntu-dev-tools pbuilder debootstrap debian-archive-keyring git-buildpackage
+
+      - name: Cache pbuilder archive
+        uses: actions/cache@v2
+        id: deb_cache
+        with:
+          path: ~/pbuilder/${{ matrix.dist }}*-base.tgz
+          key: pbuilder-${{ matrix.dist }}-${{ matrix.arch }}
+
+      - name: Create or update pbuilder base
+        id: pbuilder_create
+        run: |
+          if [[ "${{ steps.deb_cache.outputs.cache-hit }}" != "true" ]]; then
+            pbuilder-dist ${{ matrix.dist }} ${{ matrix.arch }} create
+          else
+            pbuilder-dist ${{ matrix.dist }} ${{ matrix.arch }} update
+          fi;
+
+      - name: Build deb archive
+        env:
+          UBUNTUTOOLS_UBUNTU_MIRROR: http://azure.archive.ubuntu.com/ubuntu
+          UBUNTUTOOLS_DEBIAN_MIRROR: http://debian-archive.trafficmanager.net/debian/
+          GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"
+        run: |
+          cat <(echo -e "${{ secrets.GPG_KEY }}") | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+          SINCE=$(git describe --match "v[0-9\.]*" --abbrev=0)
+          gbp dch \
+            --ignore-branch \
+            --since $SINCE \
+            --meta \
+            --release \
+            --distribution=${{ matrix.dist }} \
+            --force-distribution \
+            --spawn-editor=never \
+            --new-version=${{ needs.version.outputs.deb_version }}~${{ matrix.dist }}
+          dpkg-source -I.git -b .
+          pbuilder-dist ${{ matrix.dist }} ${{ matrix.arch }} build \
+            --source-only-changes \
+            --debbuildopts --buildinfo-option="-O" \
+            --buildresult ~/pbuilder/${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}_result \
+            ../jitsi-lgpl-dependencies_*.dsc
+          cd ~/pbuilder/${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}_result
+          debsign -S -edev@jitsi.org *_source.changes --re-sign -p${{ github.workspace }}/.github/workflows/gpg-wrap.sh
+
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}
+          path: ~/pbuilder/${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}_result/*
+
+  windows:
+    name: Windows ${{ matrix.arch}} Natives
+    runs-on: windows-latest
+    needs: javatest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x86, x64 ]
+    steps:
+      - name: Expand architecture
+        id: expand_arch
+        shell: bash
+        run: |
+          if [ "${{ matrix.arch }}" == "x86" ]; then
+            echo "::set-output name=jitsi_arch::x86"
+            echo "::set-output name=msystem::MINGW32"
+            echo "::set-output name=mingw_arch::i686"
+          else
+            echo "::set-output name=jitsi_arch::x86-64"
+            echo "::set-output name=msystem::MINGW64"
+            echo "::set-output name=mingw_arch::x86_64"
+          fi;
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Java
+        id: install_java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.RELEASE_JAVA_VERSION }}
+          java-package: jdk
+          architecture: ${{ matrix.arch }}
+
+      - name: Compile Java for JNI headers
+        run: mvn -B compile
+
+      - name: Install MSYS2 packages
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ steps.expand_arch.outputs.msystem }}
+          install: >-
+            diffutils
+            git
+            make
+            mingw-w64-${{ steps.expand_arch.outputs.mingw_arch }}-toolchain
+            mingw-w64-${{ steps.expand_arch.outputs.mingw_arch }}-cmake
+            mingw-w64-${{ steps.expand_arch.outputs.mingw_arch }}-pkg-config
+            nasm
+            pkg-config
+            yasm
+
+      - name: Build natives
+        shell: msys2 {0}
+        run: |
+          cmake -B cmake-build-${{ matrix.arch}} -G "MinGW Makefiles" -DJAVA_HOME=${JAVA_HOME//\\/\/}
+          cmake --build cmake-build-${{ matrix.arch}} --config Release --target install
+
+      - name: Upload natives
+        uses: actions/upload-artifact@v2
+        with:
+          name: win32-${{ steps.expand_arch.outputs.jitsi_arch }}
+          path: src/main/resources/win32-${{ steps.expand_arch.outputs.jitsi_arch }}/*
+
+  mac:
+    runs-on: macos-latest
+    needs: javatest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Java
+        id: install_java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.RELEASE_JAVA_VERSION }}
+          java-package: jdk
+
+      - name: Compile Java for JNI headers
+        run: mvn -B compile
+
+      - name: Build natives
+        run: |
+          brew install yasm
+          brew install nasm
+          cmake -B cmake-build -DJAVA_HOME=${{ steps.install_java.outputs.path }}
+          cmake --build cmake-build --config Release --target install
+
+      - name: Upload natives
+        uses: actions/upload-artifact@v2
+        with:
+          name: darwin
+          path: src/main/resources/darwin/*
+
+  release:
+    #if: github.ref == 'refs/heads/master'
+    needs: [ version, deb, windows, mac ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.RELEASE_JAVA_VERSION }}
+          server-id: ossrh
+          server-username: SONATYPE_USER
+          server-password: SONATYPE_PW
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set version and prepare packages
+        id: version
+        run: |
+          sudo -H pip3 install --upgrade setuptools
+          sudo -H pip3 install --upgrade wheel
+          sudo -H pip3 install --upgrade cloudsmith-cli
+          sudo apt-get -y install dput
+          if [ "${{ needs.version.outputs.create_tag }}" == "true" ]; then
+            echo "Creating tag $TAG_NAME"
+            git config --local user.name "$GITHUB_ACTOR via GitHub Action"
+            git config --local user.email "action@github.com"
+            git tag -a "$TAG_NAME" -m "Tagged automatically by GitHub Action ${{ github.workflow }}"
+            git push origin "$TAG_NAME"
+          fi;
+          mvn -B versions:set -DnewVersion=${{ needs.version.outputs.version }} -DgenerateBackupPoms=false
+
+      - name: Download binaries
+        uses: actions/download-artifact@v2
+        with:
+          path: target
+
+      - name: Copy natives for Maven
+        run: |
+          ls -R
+          BASEDIR=$(pwd)/src/main/resources
+          mkdir -p $BASEDIR
+          cd target
+          for dist in */ ; do
+              mkdir $BASEDIR/$dist
+              if [[ "$dist" =~ ^win32 ]]; then
+                  cp $dist/*.dll $BASEDIR/$dist
+              elif [[ "$dist" =~ darwin ]]; then
+                  cp $dist/*.dylib $BASEDIR/$dist
+              fi;
+          done;
+
+      - name: Release to Maven Central
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_PW: ${{ secrets.SONATYPE_PW }}
+        run: |
+          cat <(echo -e "${{ secrets.GPG_KEY }}") | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+          mvn \
+            --no-transfer-progress \
+            --batch-mode \
+            -Dgpg.passphrase="${{ secrets.GPG_PW }}" \
+            -Dmultiplatform=true \
+            -DperformRelease=true \
+            -Drelease=true \
+            -DskipTests \
+            deploy
+
+      - name: Push packages to ppa and Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          REPO_SUFFIX="-snapshots"
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            REPO_SUFFIX=""
+          fi;
+          cd target
+          for dist in */ ; do
+            if [[ "$dist" =~ ^(debian|ubuntu)- ]]; then
+              IFS='-' read -r -a triplet <<< "${dist/\//}"
+              # source only upload to ppa
+              if [[ "${triplet[0]}" == "ubuntu" && "${triplet[2]}" == "amd64" ]]; then
+                echo "Upload ${dist}*_source.changes to ppa:jitsi/jitsi-desktop$REPO_SUFFIX"
+                dput ppa:jitsi/jitsi-desktop$REPO_SUFFIX ${dist}*_source.changes
+              fi;
+              # upload all architecture-specific binaries to cloudsmith, but only one java-all
+              echo "Upload ${dist}libjitsi-lgpl-dependencies-jni_*.deb to Cloudsmith"
+              cloudsmith push deb jitsi/jitsi-desktop$REPO_SUFFIX/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-jni_*.deb
+              if [[ "${triplet[2]}" == "amd64" ]]; then
+                echo "Upload ${dist}libjitsi-lgpl-dependencies-java_*.deb to Cloudsmith"
+                cloudsmith push deb jitsi/jitsi-desktop$REPO_SUFFIX/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-java_*.deb
+              fi;
+            fi;
+          done;

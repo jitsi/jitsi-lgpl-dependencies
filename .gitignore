@@ -9,6 +9,6 @@
 /.settings
 .classpath
 .project
-/cmake-build-debug
+/cmake-build*
 /build*
 /thirdparty/*.gz
