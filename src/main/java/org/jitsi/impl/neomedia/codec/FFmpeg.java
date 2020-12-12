@@ -6,8 +6,6 @@
  */
 package org.jitsi.impl.neomedia.codec;
 
-import org.jitsi.utils.*;
-
 import java.nio.*;
 
 /**
@@ -232,7 +230,7 @@ public class FFmpeg
         Throwable firstPassLoadingFfmpegError = null;
         try
         {
-            JNIUtils.loadLibrary("jnffmpeg", FFmpeg.class);
+            System.loadLibrary("jnffmpeg");
             jnffmpegLoaded = true;
         }
         catch (Throwable t)
@@ -247,11 +245,11 @@ public class FFmpeg
                 {
                     // if its not loaded and it is Linux, we may be on a
                     // distribution using the -ffmpeg libraries
-                    JNIUtils.loadLibrary("jnffmpeg-ffmpeg", FFmpeg.class);
+                    System.loadLibrary("jnffmpeg-ffmpeg");
                 }
                 else
                 {
-                    JNIUtils.loadLibrary("jnffmpeg-no-openh264", FFmpeg.class);
+                    System.loadLibrary("jnffmpeg-no-openh264");
                 }
             }
         }
@@ -627,8 +625,6 @@ public class FFmpeg
 
     public static native void avcodeccontext_set_rc_buffer_size(long ctx,
         int rc_buffer_size);
-
-    public static native void avcodeccontext_set_rc_eq(long ctx, String rc_eq);
 
     public static native void avcodeccontext_set_rc_max_rate(long ctx,
         int rc_max_rate);

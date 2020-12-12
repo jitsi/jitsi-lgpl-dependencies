@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+export JAVA_HOME=/usr/lib/jvm/default-java
+#export DH_VERBOSE=1
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+%:
+	dh $@ --with javahelper
+
+override_dh_auto_configure:
+	dh_auto_configure -Smaven
+	dh_auto_configure -Scmake -- \
+		-DCMAKE_LIBRARY_ARCHITECTURE="$(DEB_HOST_MULTIARCH)" \
+		-DJITSI_BUILD_DEBIAN=ON
+
+override_dh_auto_build:
+	dh_auto_build -Smaven
+	dh_auto_build -Scmake
+
+override_dh_auto_test:
+	# do nothing, there are no tests
+
+override_dh_auto_install-indep:
+	dh_auto_install -plibjitsi-lgpl-dependencies-java -Smaven
+
+override_dh_auto_install-arch:
+	dh_auto_install -plibjitsi-lgpl-dependencies-jni -Scmake
+	dh_install -plibjitsi-lgpl-dependencies-jni usr/lib/$(DEB_HOST_MULTIARCH)/*.so usr/lib/jni/
+
+override_dh_auto_clean:
+	dh_auto_clean -Smaven
+	dh_auto_clean -Scmake

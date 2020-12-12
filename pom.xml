@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project
     xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -7,7 +8,7 @@
   <groupId>org.jitsi</groupId>
   <artifactId>jitsi-lgpl-dependencies</artifactId>
   <version>1.2-SNAPSHOT</version>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <name>jitsi-lgpl-dependencies</name>
   <description>
@@ -55,44 +56,22 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.1</version>
         <configuration>
-            <source>1.8</source>
-            <target>1.8</target>
-            <compilerArgs>
-                <arg>-Xlint:all</arg>
-            </compilerArgs>
+          <source>1.8</source>
+          <target>1.8</target>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+            <arg>-h</arg>
+            <arg>${project.build.directory}/native/javah/</arg>
+          </compilerArgs>
         </configuration>
-      </plugin>
-      <plugin>
-         <groupId>org.apache.felix</groupId>
-         <artifactId>maven-bundle-plugin</artifactId>
-         <version>5.1.1</version>
-         <extensions>true</extensions>
-          <configuration>
-            <instructions>
-               <Export-Package></Export-Package>
-               <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
-               <_noclassforname>true</_noclassforname>
-               <Bundle-NativeCode>
-                darwin/libjng722.jnilib;osname=Mac OS X;processor=x86-64,
-                darwin/libjnffmpeg.jnilib;osname=Mac OS X;processor=x86-64,
-                darwin/libjnffmpeg-no-openh264.jnilib;osname=Mac OS X;processor=x86-64,
-                linux-x86/libjng722.so;osname=Linux;processor=x86,
-                linux-x86-64/libjng722.so;osname=Linux;processor=x86-64,
-                win32-x86/jng722.dll;osname=Win32;processor=x86,
-                win32-x86/jnffmpeg.dll;osname=Win32;processor=x86,
-                win32-x86-64/jng722.dll;osname=Win32;processor=x86-64,
-                win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64,
-                win32-x86-64/jnffmpeg-no-openh264.dll;osname=Win32;processor=x86-64
-               </Bundle-NativeCode>
-              <!-- Prevent importing a specific version. -->
-              <Import-Package>*;version=!</Import-Package>
-            </instructions>
-         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <version>3.2.1</version>
+        <configuration>
+          <excludeResources>true</excludeResources>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -118,10 +97,140 @@
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>parse-version</id>
+            <goals>
+              <goal>parse-version</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Generate the plain Java and Windows/Mac jars -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <includes combine.children="append">
+            <include>org/**</include>
+            <include>META-INF/LICENSE</include>
+          </includes>
+          <archive>
+            <manifestEntries>
+              <!--
+               Create OSGi headers manually because we create multiple jars,
+               which is not possible with maven-bundle-plugin and bnd-maven-plugin
+               is not available in Debian/Ubuntu.
+               And the manifest is relatively simple. Rethink this as soon as
+               there is a Import-Package.
+              -->
+              <Bundle-Description>${project.description}</Bundle-Description>
+              <Bundle-License>
+                LGPL-2.1-only;link="https://github.com/jitsi/jitsi-lgpl-dependencies/blob/master/LICENSE"
+              </Bundle-License>
+              <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+              <Bundle-Name>${project.name}</Bundle-Name>
+              <Bundle-SymbolicName>org.jitsi.lgpl-dependencies
+              </Bundle-SymbolicName>
+              <Bundle-Vendor>jitsi.org</Bundle-Vendor>
+              <Bundle-Version>${parsedVersion.osgiVersion}</Bundle-Version>
+              <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
   <profiles>
+    <profile>
+      <id>multi-platform</id>
+      <activation>
+        <property>
+          <name>multiplatform</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <!-- Generate the plain Windows and Mac jars -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+              <execution>
+                <id>win32-x86-64</id>
+                <goals><goal>jar</goal></goals>
+                <phase>package</phase>
+                <configuration>
+                  <classifier>win32-x86-64</classifier>
+                  <includes>
+                    <include>win32-x86-64/**</include>
+                  </includes>
+                  <archive>
+                    <manifestEntries>
+                      <Bundle-NativeCode>
+                        win32-x86-64/jng722.dll;osname=Win32;processor=x86-64,
+                        win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64,
+                        win32-x86-64/jnffmpeg-no-openh264.dll;osname=Win32;processor=x86-64
+                      </Bundle-NativeCode>
+                    </manifestEntries>
+                  </archive>
+                </configuration>
+              </execution>
+              <execution>
+                <id>win32-x86</id>
+                <goals><goal>jar</goal></goals>
+                <phase>package</phase>
+                <configuration>
+                  <classifier>win32-x86</classifier>
+                  <includes>
+                    <include>win32-x86/**</include>
+                  </includes>
+                  <archive>
+                    <manifestEntries>
+                      <Bundle-NativeCode>
+                        win32-x86/jng722.dll;osname=Win32;processor=x86,
+                        win32-x86/jnffmpeg.dll;osname=Win32;processor=x86,
+                        win32-x86/jnffmpeg-no-openh264.dll;osname=Win32;processor=x86
+                      </Bundle-NativeCode>
+                    </manifestEntries>
+                  </archive>
+                </configuration>
+              </execution>
+              <execution>
+                <id>darwin</id>
+                <goals><goal>jar</goal></goals>
+                <phase>package</phase>
+                <configuration>
+                  <classifier>darwin</classifier>
+                  <includes>
+                    <include>darwin/**</include>
+                  </includes>
+                  <archive>
+                    <manifestEntries>
+                      <Bundle-NativeCode>
+                        darwin/jng722.dylib;osname=Mac OS X;processor=x86-64,
+                        darwin/libjnffmpeg.dylib;osname=Mac OS X;processor=x86-64,
+                        darwin/libjnffmpeg-no-openh264.dylib;osname=Mac OS X;processor=x86-64
+                      </Bundle-NativeCode>
+                    </manifestEntries>
+                  </archive>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>release</id>
       <activation>
@@ -156,19 +265,6 @@
       </build>
     </profile>
   </profiles>
-
-  <dependencies>
-    <dependency>
-      <groupId>net.java.dev.jna</groupId>
-      <artifactId>jna</artifactId>
-      <version>5.6.0</version>
-    </dependency>
-    <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>jitsi-utils</artifactId>
-        <version>1.0-67-g4032ab6</version>
-    </dependency>
-  </dependencies>
 
   <distributionManagement>
     <snapshotRepository>

@@ -12,11 +12,7 @@ own projects, consider the Apache License and the LGPL to be incompatible.
 We do not share their opinion. But for those who do, we provide the possibility
 to leave all LGPL related components out of libjitsi.
 
-## Usage
-### As an OSGi bundle
+## Usage in OSGi
 **jitsi-lgpl-dependencies** is a [fragment](http://wiki.osgi.org/wiki/Fragment)
 that is hosted by **libjitsi**. Simply install the fragment before starting
 the libjitsi bundle.
-
-### Standalone
-TODO

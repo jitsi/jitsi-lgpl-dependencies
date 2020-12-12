@@ -41,7 +41,7 @@ function(ext_ffmpeg SUFFIX INC LD ARGS)
     #file(MAKE_DIRECTORY ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX})
     file(WRITE ${FFMPEG_ROOT}/src/config${SUFFIX}.sh
             "#!/bin/sh
-export PKG_CONFIG_PATH=\"${PKG_CONFIG_PATH};${LIBOPENH264_LIBRARY_DIRS}/pkgconfig\"
+export PKG_CONFIG_PATH=\"${LIBOPENH264_LIBRARY_DIRS}/pkgconfig\"
 ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/configure --prefix=${FFMPEG_ROOT} --enable-version3 --disable-programs --disable-doc --disable-network --disable-everything --disable-iconv --enable-decoder=mjpeg --enable-parser=mjpeg --enable-filter=format --enable-filter=hflip --enable-filter=scale --enable-filter=nullsink ${CFLAGS} ${LDFLAGS} ${ARGS}
 "
     )
@@ -58,19 +58,16 @@ sed -i -e 's/#define HAVE_NANOSLEEP.*/#define HAVE_NANOSLEEP 0/' ${FFMPEG_ROOT}/
             LOG_CONFIGURE 1
 
             # download
-            DOWNLOAD_DIR ${external_download_dir}
-            URL https://www.ffmpeg.org/releases/ffmpeg-3.4.tar.gz
-            URL_HASH SHA256=6ED03B00404A3923E3C2F560248A9C9AD79FBAAEE26D723F74AAE6B31FE2BAE6
+            GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg
+            GIT_TAG 6b6b9e593dd4d3aaf75f48d40a13ef03bdef9fdb #n4.3.1
             TLS_VERIFY true
 
             UPDATE_COMMAND cp ${FFMPEG_ROOT}/src/config${SUFFIX}.sh ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh
 
             # configure
-            #CONFIGURE_COMMAND echo asdf
             CONFIGURE_COMMAND sh ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh
 
             # build
-            #BUILD_COMMAND echo asdf
             BUILD_COMMAND make
 
             # install

@@ -1,0 +1,47 @@
+Source: jitsi-lgpl-dependencies
+Section: net
+Priority: optional
+Maintainer: Jitsi Team <dev@jitsi.org>
+Uploaders: Ingo Bauersachs <ingo@jitsi.org>
+Homepage: https://github.com/jitsi/jitsi-lgpl-dependencies
+Vcs-Git: https://github.com/jitsi/jitsi-lgpl-dependencies.git
+Vcs-Browser: https://github.com/jitsi/jitsi-lgpl-dependencies
+Standards-Version: 4.5.0
+Build-Depends:
+ debhelper (>= 11),
+ javahelper,
+ dpkg-dev (>= 1.16.1),
+ default-jdk,
+ maven-debian-helper,
+ libbuild-helper-maven-plugin-java,
+ cmake (>= 3.10),
+ pkg-config,
+ libmp3lame-dev,
+ libavutil-dev (>= 7:3.2~),
+ libavcodec-dev (>= 7:3.2~),
+ libavformat-dev (>= 7:3.2~),
+ libavfilter-dev (>= 7:3.2~),
+ libswscale-dev (>= 7:3.2~),
+
+Package: libjitsi-lgpl-dependencies-java
+Architecture: all
+Depends:
+ ${java:Depends},
+ ${misc:Depends},
+ ${maven:Depends},
+ libjitsi-lgpl-dependencies-jni (>= ${source:Version}),
+ libjitsi-lgpl-dependencies-jni (<< ${source:Version}.1),
+Description: Submodule of libjitsi for LGPL dependencies (Java part)
+ This is an optional submodule of libjitsi that encapsulates references to
+ external LGPL licensed libraries.
+ .
+ Java-only part of the package.
+
+Package: libjitsi-lgpl-dependencies-jni
+Architecture: i386 amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Submodule of libjitsi for LGPL dependencies (JNI part)
+ This is an optional submodule of libjitsi that encapsulates references to
+ external LGPL licensed libraries.
+ .
+ Native/JNI part of the package.

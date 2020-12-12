@@ -1,23 +1,25 @@
-﻿Build jnffmpeg
-==============
+﻿Manually building jnffmpeg
+==========================
 
-Versions
---------
+Library versions
+----------------
 - FFmpeg 3.4
-- lame 3.99.5/lame-3.100
-- openh264 1.7.0.
+- lame 3.100
+- openh264 2.2.1
 
 Prerequisites
 -------------
+All systems: Java 8 or newer, Maven, CMake >= 3.10
 
 ### Windows
 - Get [MSYS2 64bit distro](http://www.msys2.org/)
-- Update it according to [instructions](https://github.com/msys2/msys2/wiki/MSYS2-installation)
+- Update it according to [instructions](https://www.msys2.org/wiki/MSYS2-installation/)
 - Install packages (pacman -S):
   - make
   - diffutils
   - yasm
   - git
+  - pkg-config
   - nasm
   - mingw-w64-i686-toolchain
   - mingw-w64-i686-cmake
@@ -26,16 +28,14 @@ Prerequisites
   - mingw-w64-x86_64-cmake
   - mingw-w64-x86_64-pkg-config
 
-Copy `<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-gcc-ar.exe` to
-`<msys2-installir>/mingw64/bin/x86_64-w64-mingw32-ar.exe`
 
 ### OS X
-- [nasm](http://www.nasm.us/pub/nasm/releasebuilds/2.13/macosx/nasm-2.13-macosx.zip)
+- `brew install nasm`
 - `brew install pkg-config`
 
 
-Libraries
----------
+Build libraries
+---------------
 ### lame
 
 ```
@@ -48,13 +48,8 @@ Libraries
 make
 ```
 
-FFmpeg looks for `lame.h` as `lame/lame.h` but the installed lame-3.99.5 does not
-have the lame directory so go into lame-3.99.5/include and `ln -s . lame` on
-Linux and Mac OS X or `mklink /d lame .` on Windows.
-(instructions above not needed for lame-3.100)
-
-For x86, `export CFLAGS=-msse` to enable the SSE intrinsics. See Lame#443 for
-details: https://sourceforge.net/p/lame/bugs/443/
+For x86, `export CFLAGS=-msse` to enable the SSE intrinsics.
+See [Lame#443](https://sourceforge.net/p/lame/bugs/443/) for details.
 
 ### openh264
 
@@ -68,16 +63,17 @@ x64:
 #### Mac OS X
 ```
 make install
-cd openh264-1.7.0/codec/api
+cd openh264-2.2.1/codec/api
 export PKG_CONFIG_PATH=$OH264
 ```
 
 ### ffmpeg
 We need two different ffmpeg builds, one with and one without libopenh264
 
-Set paths for the previously compiled lame and openh264:
+Set paths for the previously compiled lame and openh264
+(adjust the paths accordingly):
 ```
-export MP3LAME_HOME=/c/Java/lame-3.99.5
+export MP3LAME_HOME=/c/Java/lame-3.100
 export OH264=/c/Java/openh264
 ```
 
@@ -120,7 +116,7 @@ make
 ```
 
 #### Windows
-Make sure that pthreads are not used. It might be necessary to append
+Make sure pthreads are not used. It might be necessary to append
 `--enable-w32threads --disable-pthreads`. The configure script might also
 detect `nanosleep` and `clock_gettime`, manually disable those in `config.h`
 by setting `HAVE_CLOCK_GETTIME` and `HAVE_NANOSLEEP` to `0`.
@@ -131,19 +127,7 @@ Add the following to the configure line:
 
 
 ### jnffmpeg
-```
-export FFMPEG_HOME=/Users/dminkov/dev/ffmpeg/ffmpeg-3.4
-export FFMPEG_HOME_NO_OPENH264=/Users/dminkov/dev/ffmpeg/ffmpeg-3.4-no-openh264
-export MP3LAME_HOME=/Users/dminkov/dev/ffmpeg/lame-3.99.5
-export OH264=/Users/dminkov/dev/ffmpeg/openh264-1.7.0
-
-ant ffmpeg -Dffmpeg=$FFMPEG_HOME -Dlame=$MP3LAME_HOME -Dopenh264=$OH264
-# -Darch=32
-ant ffmpeg -Dffmpeg=$FFMPEG_HOME_NO_OPENH264 -Dlame=$MP3LAME_HOME -DskipOpenh264=true 
-# -Darch=32
-```
-
-Define the environment variable JAVA_HOME so that the JNI headers can be found.
-Change the current directory to libjitsi/ and run "ant ffmpeg" passing it values
-for the ffmpeg, lame, and open264 properties which specify the paths to
-the homes of the development trees of the respective libraries.
+jnffmpeg uses CMake as the buildsystem, which includes building all necessary
+libraries.
+- Define the environment variable JAVA_HOME so that the JNI headers can be found.
+- Compile the Java JNI headers with `mvn compile`

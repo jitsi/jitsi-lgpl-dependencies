@@ -4,18 +4,21 @@
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
-#include "FFmpeg.h"
+#include <org_jitsi_impl_neomedia_codec_FFmpeg.h>
 
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <libavutil/avutil.h>
+#include <libavutil/imgutils.h>
 #include <libavutil/pixdesc.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
+#if LIBAVFILTER_VERSION_MAJOR < 7
 #include <libavfilter/avfiltergraph.h>
+#endif
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libswscale/swscale.h>
@@ -77,7 +80,9 @@ JNIEXPORT void JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_av_1register_1all
     (JNIEnv *env, jclass clazz)
 {
+#if LIBAVUTIL_VERSION_MAJOR < 56
     av_register_all();
+#endif
 }
 
 JNIEXPORT jlong JNICALL
@@ -532,7 +537,6 @@ DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(keyint_1min, keyint_min)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(max_1b_1frames, max_b_frames)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(mb_1decision, mb_decision)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1cmp, me_cmp)
-DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1method, me_method)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1range, me_range)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(me_1subpel_1quality, me_subpel_quality)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(pix_1fmt, pix_fmt)
@@ -553,33 +557,6 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1quantizer
 }
 
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rc_1buffer_1size, rc_buffer_size)
-
-JNIEXPORT void JNICALL
-Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1set_1rc_1eq
-    (JNIEnv *env, jclass clazz, jlong ctx, jstring rc_eq)
-{
-    char *s;
-
-    if (rc_eq)
-    {
-        const char *js = (*env)->GetStringUTFChars(env, rc_eq, NULL);
-
-        if (js)
-        {
-            s = av_strdup(js);
-            (*env)->ReleaseStringUTFChars(env, rc_eq, js);
-        }
-        else
-        {
-            s = NULL;
-        }
-    }
-    else
-    {
-        s = NULL;
-    }
-    ((AVCodecContext *) (intptr_t) ctx)->rc_eq = s;
-}
 
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(rc_1max_1rate, rc_max_rate)
 DEFINE_AVCODECCONTEXT_I_PROPERTY_SETTER(refs, refs)
@@ -712,7 +689,9 @@ JNIEXPORT void JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_avfilter_1register_1all
     (JNIEnv *env, jclass clazz)
 {
+#if LIBAVFILTER_VERSION_MAJOR < 7
     avfilter_register_all();
+#endif
 }
 
 /*
@@ -840,11 +819,12 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avpicture_1fill
 {
     return
         (jint)
-            avpicture_fill(
-                    (AVPicture *) (intptr_t) picture,
+            av_image_fill_arrays(
+                    ((AVFrame *) (intptr_t) picture)->data,
+                    ((AVFrame *) (intptr_t) picture)->linesize,
                     (uint8_t *) (intptr_t) ptr,
                     (int) pix_fmt,
-                    (int) width, (int) height);
+                    (int) width, (int) height, 1);
 }
 
 JNIEXPORT jlong JNICALL
@@ -974,20 +954,21 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_sws_1scale__JJIILjava_lang_Object_2III
     (JNIEnv *env, jclass clazz, jlong ctx, jlong src, jint srcSliceY,
         jint srcSliceH, jobject dst, jint dstFormat, jint dstW, jint dstH)
 {
-    AVPicture *srcPicture;
+    AVFrame *srcPicture;
     uint8_t *dst_;
     int ret;
 
-    srcPicture = (AVPicture *) (intptr_t) src;
+    srcPicture = (AVFrame *) (intptr_t) src;
     dst_ = (*env)->GetPrimitiveArrayCritical(env, dst, NULL);
     if (dst_)
     {
-        AVPicture dstPicture;
+        AVFrame dstPicture;
 
-        /* Turn the bytes into an AVPicture. */
-        avpicture_fill(
-                &dstPicture,
-                dst_, (int) dstFormat, (int) dstW, (int) dstH);
+        /* Turn the bytes into an AVFrame. */
+        av_image_fill_arrays(
+                dstPicture.data,
+                dstPicture.linesize,
+                dst_, (int) dstFormat, (int) dstW, (int) dstH, 1);
         ret
             = sws_scale(
                     (struct SwsContext *) (intptr_t) ctx,
@@ -1018,11 +999,12 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_sws_1scale__JLjava_lang_Object_2IIIIIL
     src_ = (*env)->GetPrimitiveArrayCritical(env, src, NULL);
     if (src_)
     {
-        AVPicture srcPicture;
+        AVFrame srcPicture;
 
-        avpicture_fill(
-                &srcPicture,
-                src_, (int) srcFormat, (int) srcW, (int) srcH);
+        av_image_fill_arrays(
+                srcPicture.data,
+                srcPicture.linesize,
+                src_, (int) srcFormat, (int) srcW, (int) srcH, 1);
         ret
             = Java_org_jitsi_impl_neomedia_codec_FFmpeg_sws_1scale__JJIILjava_lang_Object_2III(
                     env,
