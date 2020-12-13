@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v1
@@ -64,6 +66,7 @@ jobs:
           echo "Version: $VERSION"
           echo "::set-output name=version::${VERSION}"
           echo "::set-output name=deb_version::${DEB_VERSION}"
+          echo "::set-output name=tag_name::${TAG_NAME}"
 
   javatest:
     name: Java ${{ matrix.java }}
@@ -306,8 +309,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v1
@@ -336,8 +337,8 @@ jobs:
             echo "Creating tag $TAG_NAME"
             git config --local user.name "$GITHUB_ACTOR via GitHub Action"
             git config --local user.email "action@github.com"
-            git tag -a "$TAG_NAME" -m "Tagged automatically by GitHub Action ${{ github.workflow }}"
-            git push origin "$TAG_NAME"
+            git tag -a "${{ needs.version.outputs.tag_name }}" -m "Tagged automatically by GitHub Action ${{ github.workflow }}"
+            git push origin "${{ needs.version.outputs.tag_name }}"
           fi;
           mvn -B versions:set -DnewVersion=${{ needs.version.outputs.version }} -DgenerateBackupPoms=false
 
