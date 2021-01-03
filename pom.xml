@@ -178,8 +178,8 @@
                   <archive>
                     <manifestEntries>
                       <Bundle-NativeCode>
-                        win32-x86-64/jng722.dll;osname=Win32;processor=x86-64,
-                        win32-x86-64/jnffmpeg.dll;osname=Win32;processor=x86-64,
+                        win32-x86-64/jng722.dll;
+                        win32-x86-64/jnffmpeg.dll;
                         win32-x86-64/jnffmpeg-no-openh264.dll;osname=Win32;processor=x86-64
                       </Bundle-NativeCode>
                     </manifestEntries>
@@ -198,8 +198,8 @@
                   <archive>
                     <manifestEntries>
                       <Bundle-NativeCode>
-                        win32-x86/jng722.dll;osname=Win32;processor=x86,
-                        win32-x86/jnffmpeg.dll;osname=Win32;processor=x86,
+                        win32-x86/jng722.dll;
+                        win32-x86/jnffmpeg.dll;
                         win32-x86/jnffmpeg-no-openh264.dll;osname=Win32;processor=x86
                       </Bundle-NativeCode>
                     </manifestEntries>
@@ -218,8 +218,8 @@
                   <archive>
                     <manifestEntries>
                       <Bundle-NativeCode>
-                        darwin/jng722.dylib;osname=Mac OS X;processor=x86-64,
-                        darwin/libjnffmpeg.dylib;osname=Mac OS X;processor=x86-64,
+                        darwin/jng722.dylib;
+                        darwin/libjnffmpeg.dylib;
                         darwin/libjnffmpeg-no-openh264.dylib;osname=Mac OS X;processor=x86-64
                       </Bundle-NativeCode>
                     </manifestEntries>
