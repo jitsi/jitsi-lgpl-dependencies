@@ -303,7 +303,7 @@ jobs:
           path: src/main/resources/darwin/*
 
   release:
-    #if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     needs: [ version, deb, windows, mac ]
     runs-on: ubuntu-latest
     steps:
