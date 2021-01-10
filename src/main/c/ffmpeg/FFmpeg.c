@@ -482,6 +482,36 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1register_1all
 }
 
 JNIEXPORT void JNICALL
+Java_org_jitsi_impl_neomedia_codec_FFmpeg_jnffmpeg_1get_1codec_1ids
+        (JNIEnv * env, jclass clazz, jobject codecIdMap)
+{
+    jclass mapClazz = (*env)->FindClass(env, "java/util/Map");
+    jmethodID putMethod = (*env)->GetMethodID(
+            env,
+            mapClazz,
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+    );
+    jclass integerClass = (*env)->FindClass(env, "java/lang/Integer");
+    jmethodID valueOfMethod = (*env)->GetStaticMethodID(env, integerClass, "valueOf", "(I)Ljava/lang/Integer;");
+
+    (*env)->CallObjectMethod(env, codecIdMap, putMethod, (*env)->NewStringUTF(env, "AV_CODEC_ID_AMR_NB"),
+                             (*env)->CallStaticObjectMethod(env, integerClass, valueOfMethod, AV_CODEC_ID_AMR_NB));
+    (*env)->CallObjectMethod(env, codecIdMap, putMethod, (*env)->NewStringUTF(env, "AV_CODEC_ID_AMR_WB"),
+                             (*env)->CallStaticObjectMethod(env, integerClass, valueOfMethod, AV_CODEC_ID_AMR_WB));
+    (*env)->CallObjectMethod(env, codecIdMap, putMethod, (*env)->NewStringUTF(env, "AV_CODEC_ID_MJPEG"),
+                             (*env)->CallStaticObjectMethod(env, integerClass, valueOfMethod, AV_CODEC_ID_MJPEG));
+    (*env)->CallObjectMethod(env, codecIdMap, putMethod, (*env)->NewStringUTF(env, "AV_CODEC_ID_H264"),
+                             (*env)->CallStaticObjectMethod(env, integerClass, valueOfMethod, AV_CODEC_ID_H264));
+    (*env)->CallObjectMethod(env, codecIdMap, putMethod, (*env)->NewStringUTF(env, "AV_CODEC_ID_MP3"),
+                             (*env)->CallStaticObjectMethod(env, integerClass, valueOfMethod, AV_CODEC_ID_MP3));
+    (*env)->CallObjectMethod(env, codecIdMap, putMethod, (*env)->NewStringUTF(env, "AV_CODEC_ID_VP8"),
+                             (*env)->CallStaticObjectMethod(env, integerClass, valueOfMethod, AV_CODEC_ID_VP8));
+    (*env)->CallObjectMethod(env, codecIdMap, putMethod, (*env)->NewStringUTF(env, "AV_CODEC_ID_VP9"),
+                             (*env)->CallStaticObjectMethod(env, integerClass, valueOfMethod, AV_CODEC_ID_VP9));
+}
+
+JNIEXPORT void JNICALL
 Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodeccontext_1add_1flags
     (JNIEnv *env, jclass clazz, jlong ctx, jint flags)
 {

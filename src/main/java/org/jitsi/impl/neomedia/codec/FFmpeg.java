@@ -7,6 +7,7 @@
 package org.jitsi.impl.neomedia.codec;
 
 import java.nio.*;
+import java.util.*;
 
 /**
  * Provides the interface to the native FFmpeg library.
@@ -62,32 +63,37 @@ public class FFmpeg
     /**
      * AMR-NB codec ID.
      */
-    private static final int CODEC_ID_AMR_NB = 0x12000;
+    public static final int CODEC_ID_AMR_NB;
 
     /**
      * AMR-WB codec ID
      */
-    public static final int CODEC_ID_AMR_WB = CODEC_ID_AMR_NB + 1;
+    public static final int CODEC_ID_AMR_WB;
 
     /**
      * H264 codec ID.
      */
-    public static final int CODEC_ID_H264 = 28;
+    public static final int CODEC_ID_H264;
 
     /**
      * MJPEG codec ID.
      */
-    public static final int CODEC_ID_MJPEG = 8;
+    public static final int CODEC_ID_MJPEG;
 
     /**
      * MP3 codec ID.
      */
-    public static final int CODEC_ID_MP3 = 0x15000 + 1;
+    public static final int CODEC_ID_MP3;
 
     /**
      * VP8 codec ID
      */
-    public static final int CODEC_ID_VP8 = 142;
+    public static final int CODEC_ID_VP8;
+
+    /**
+     * VP9 codec ID
+     */
+    public static final int CODEC_ID_VP9;
 
     /**
      * Work around bugs in encoders which sometimes cannot be detected
@@ -267,6 +273,15 @@ public class FFmpeg
         av_register_all();
         avcodec_register_all();
         avfilter_register_all();
+        HashMap<String, Integer> codecIds = new HashMap<>();
+        jnffmpeg_get_codec_ids(codecIds);
+        CODEC_ID_AMR_NB = codecIds.getOrDefault("AV_CODEC_ID_AMR_NB", 0);
+        CODEC_ID_AMR_WB = codecIds.getOrDefault("AV_CODEC_ID_AMR_WB", 0);
+        CODEC_ID_MJPEG = codecIds.getOrDefault("AV_CODEC_ID_MJPEG", 0);
+        CODEC_ID_H264 = codecIds.getOrDefault("AV_CODEC_ID_H264", 0);
+        CODEC_ID_MP3 = codecIds.getOrDefault("AV_CODEC_ID_MP3", 0);
+        CODEC_ID_VP8 = codecIds.getOrDefault("AV_CODEC_ID_VP8", 0);
+        CODEC_ID_VP9 = codecIds.getOrDefault("AV_CODEC_ID_VP9", 0);
 
         if (ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN))
         {
@@ -460,6 +475,9 @@ public class FFmpeg
             String... options);
 
     public static native void avcodec_register_all();
+
+    private static native void jnffmpeg_get_codec_ids(
+        HashMap<String, Integer> codecIds);
 
     /**
      * Add specific flags to AVCodecContext's flags member.
