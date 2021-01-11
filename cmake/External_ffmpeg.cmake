@@ -65,7 +65,7 @@ sed -i -e 's/#define HAVE_NANOSLEEP.*/#define HAVE_NANOSLEEP 0/' ${FFMPEG_ROOT}/
             UPDATE_COMMAND ""
 
             # configure
-            CONFIGURE_COMMAND sh -c "cp ${FFMPEG_ROOT}/src/config${SUFFIX}.sh ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh && ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh"
+            CONFIGURE_COMMAND /bin/bash -c "cp ${FFMPEG_ROOT}/src/config${SUFFIX}.sh ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh && ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh"
 
             # build
             BUILD_COMMAND make
