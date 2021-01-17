@@ -62,10 +62,12 @@ sed -i -e 's/#define HAVE_NANOSLEEP.*/#define HAVE_NANOSLEEP 0/' ${FFMPEG_ROOT}/
             GIT_TAG 6b6b9e593dd4d3aaf75f48d40a13ef03bdef9fdb #n4.3.1
             TLS_VERIFY true
 
-            UPDATE_COMMAND ""
+            # this should be part of the configure command, but calling it with "sh -c" doesn't work on Mac
+            # and I don't have enough patience to figure it out
+            UPDATE_COMMAND cp ${FFMPEG_ROOT}/src/config${SUFFIX}.sh ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh
 
             # configure
-            CONFIGURE_COMMAND /bin/bash -c "cp ${FFMPEG_ROOT}/src/config${SUFFIX}.sh ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh && ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh"
+            CONFIGURE_COMMAND sh ${FFMPEG_ROOT}/src/ffmpeg${SUFFIX}/config.sh
 
             # build
             BUILD_COMMAND make
