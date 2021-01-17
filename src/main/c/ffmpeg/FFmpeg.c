@@ -312,7 +312,7 @@ end:
     }
 
     av_frame_free(&frame);
-    av_free_packet(&pkt);
+    av_packet_unref(&pkt);
     return (jint) ret;
 }
 
@@ -478,7 +478,9 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1register_1all
     (JNIEnv *env, jclass clazz)
 {
     av_log_set_level(AV_LOG_FATAL);
+#if LIBAVCODEC_VERSION_MAJOR < 58
     avcodec_register_all();
+#endif
 }
 
 JNIEXPORT void JNICALL
