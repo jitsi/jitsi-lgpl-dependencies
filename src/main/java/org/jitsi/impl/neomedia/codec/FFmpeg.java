@@ -104,16 +104,22 @@ public class FFmpeg
     public static final int FF_CMP_CHROMA = 256;
 
     /**
-     * Padding size for FFmpeg input buffer.
+     * Required number of additionally allocated bytes at the end of the input
+     * bitstream for decoding.
+     * <p>
+     * This is mainly needed because some optimized bitstream readers read 32 or
+     * 64 bit at once and could read over the end. Note: If the first 23 bits of
+     * the additional bytes are not 0, then damaged MPEG bitstreams could cause
+     * overread and segfault.
      */
-    public static final int FF_INPUT_BUFFER_PADDING_SIZE = 8;
+    public static final int FF_INPUT_BUFFER_PADDING_SIZE = 64;
 
     public static final int FF_MB_DECISION_SIMPLE = 0;
 
     /**
      * The minimum encoding buffer size defined by libavcodec.
      */
-    public static final int FF_MIN_BUFFER_SIZE = 16384;
+    public static final int AV_INPUT_BUFFER_MIN_SIZE = 16384;
 
     /**
      * The H264 baseline profile.
@@ -243,6 +249,7 @@ public class FFmpeg
         {
             firstPassLoadingFfmpegError = t;
         }
+
         try
         {
             if (!jnffmpegLoaded)
@@ -262,10 +269,7 @@ public class FFmpeg
         catch (Throwable t)
         {
             // if nothing loads print all the errors we have
-            if (firstPassLoadingFfmpegError != null)
-            {
-                firstPassLoadingFfmpegError.printStackTrace();
-            }
+            firstPassLoadingFfmpegError.printStackTrace();
             t.printStackTrace();
             throw t;
         }
@@ -323,6 +327,8 @@ public class FFmpeg
      * @return native pointer or 0 if av_malloc failed
      */
     public static native long av_malloc(int size);
+
+    public static native void memset(long ptr, byte value, int size);
 
     /**
      * Initialize libavformat and register all the muxers, demuxers and
@@ -887,11 +893,13 @@ public class FFmpeg
      * @param src source image (native pointer)
      * @param srcSliceY slice Y of source image
      * @param srcSliceH slice H of source image
-     * @param dst destination image (java type)
+     * @param dst destination image (java type), must have 64 bytes extra for
+     *            native pointer alignment into the array
      * @param dstFormat destination format
      * @param dstW width of destination image
      * @param dstH height destination image
-     * @return 0 if success, -1 otherwise
+     * @return negative if the function failed (an averror code), >= 0 if the
+     *  data has an offset for memory alignment
      */
     public static native int sws_scale(
         long ctx,
@@ -908,11 +916,13 @@ public class FFmpeg
      * @param srcH height of source image
      * @param srcSliceY slice Y of source image
      * @param srcSliceH slice H of source image
-     * @param dst destination image (java type)
+     * @param dst destination image (java type), must have 64 bytes extra for
+     *            native pointer alignment into the array
      * @param dstFormat destination format
      * @param dstW width of destination image
      * @param dstH height destination image
-     * @return 0 if success, -1 otherwise
+     * @return negative if the function failed (an averror code), >= 0 if the
+     *  data has an offset for memory alignment
      */
     public static native int sws_scale(
         long ctx,

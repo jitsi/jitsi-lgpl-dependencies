@@ -1,6 +1,10 @@
 name: Java and Natives
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 env:
   # Java version to use for the release
@@ -52,7 +56,7 @@ jobs:
             fi
             VERSION=`git describe --match "v[0-9\.]*" --long --always`
             VERSION=${VERSION:1}
-            DEB_VERSION=${VERSION//-/.}~${{ matrix.dist }}
+            DEB_VERSION=${VERSION//-/.}
           else
             echo "Not on master"
             echo "::set-output name=create_tag::false"
@@ -383,25 +387,25 @@ jobs:
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         run: |
-          REPO_SUFFIX="-snapshots"
-          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-            REPO_SUFFIX=""
-          fi;
+          REPO_NAME="jitsi-desktop-snapshots"
+          #if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          #  REPO_NAME="jitsi-desktop"
+          #fi;
           cd target
           for dist in */ ; do
             if [[ "$dist" =~ ^(debian|ubuntu)- ]]; then
               IFS='-' read -r -a triplet <<< "${dist/\//}"
               # source only upload to ppa
               if [[ "${triplet[0]}" == "ubuntu" && "${triplet[2]}" == "amd64" ]]; then
-                echo "Upload ${dist}*_source.changes to ppa:jitsi/jitsi-desktop$REPO_SUFFIX"
-                dput ppa:jitsi/jitsi-desktop$REPO_SUFFIX ${dist}*_source.changes
+                echo "Upload ${dist}*_source.changes to ppa:jitsi/$REPO_NAME"
+                dput ppa:jitsi/$REPO_NAME ${dist}*_source.changes
               fi;
               # upload all architecture-specific binaries to cloudsmith, but only one java-all
               echo "Upload ${dist}libjitsi-lgpl-dependencies-jni_*.deb to Cloudsmith"
-              cloudsmith push deb jitsi/jitsi-desktop$REPO_SUFFIX/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-jni_*.deb
+              cloudsmith push deb jitsi/$REPO_NAME/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-jni_*.deb
               if [[ "${triplet[2]}" == "amd64" ]]; then
                 echo "Upload ${dist}libjitsi-lgpl-dependencies-java_*.deb to Cloudsmith"
-                cloudsmith push deb jitsi/jitsi-desktop$REPO_SUFFIX/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-java_*.deb
+                cloudsmith push deb jitsi/$REPO_NAME/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-java_*.deb
               fi;
             fi;
           done;

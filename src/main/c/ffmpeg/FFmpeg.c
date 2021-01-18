@@ -7,14 +7,11 @@
 #include <org_jitsi_impl_neomedia_codec_FFmpeg.h>
 
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <libavutil/avutil.h>
 #include <libavutil/imgutils.h>
-#include <libavutil/pixdesc.h>
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
 #if LIBAVFILTER_VERSION_MAJOR < 7
 #include <libavfilter/avfiltergraph.h>
@@ -74,6 +71,13 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_av_1malloc
     (JNIEnv *env, jclass clazz, jint size)
 {
     return (jlong) (intptr_t) av_malloc((unsigned int) size);
+}
+
+JNIEXPORT void JNICALL
+Java_org_jitsi_impl_neomedia_codec_FFmpeg_memset
+        (JNIEnv *env, jclass clazz, jlong ptr, jbyte value, jint size)
+{
+    memset((void *) ptr, value, size);
 }
 
 JNIEXPORT void JNICALL
@@ -312,7 +316,7 @@ end:
     }
 
     av_frame_free(&frame);
-    av_free_packet(&pkt);
+    av_packet_unref(&pkt);
     return (jint) ret;
 }
 
@@ -385,7 +389,7 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1free_1packet
     {
         AVPacket *pkt_ = (AVPacket *) (intptr_t) pkt;
 
-        av_free_packet(pkt_);
+        av_packet_unref(pkt_);
         av_free(pkt_);
     }
 }
@@ -478,7 +482,9 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avcodec_1register_1all
     (JNIEnv *env, jclass clazz)
 {
     av_log_set_level(AV_LOG_FATAL);
+#if LIBAVCODEC_VERSION_MAJOR < 58
     avcodec_register_all();
+#endif
 }
 
 JNIEXPORT void JNICALL
@@ -854,7 +860,7 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_avpicture_1fill
                     ((AVFrame *) (intptr_t) picture)->linesize,
                     (uint8_t *) (intptr_t) ptr,
                     (int) pix_fmt,
-                    (int) width, (int) height, 1);
+                    (int) width, (int) height, 64);
 }
 
 JNIEXPORT jlong JNICALL
@@ -984,30 +990,37 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_sws_1scale__JJIILjava_lang_Object_2III
     (JNIEnv *env, jclass clazz, jlong ctx, jlong src, jint srcSliceY,
         jint srcSliceH, jobject dst, jint dstFormat, jint dstW, jint dstH)
 {
+    const int align = 64;
     AVFrame *srcPicture;
     uint8_t *dst_;
+    uint8_t *dstAligned;
     int ret;
 
     srcPicture = (AVFrame *) (intptr_t) src;
     dst_ = (*env)->GetPrimitiveArrayCritical(env, dst, NULL);
     if (dst_)
     {
+        dstAligned = (uint8_t *) FFALIGN((jlong) dst_, align);
         AVFrame dstPicture;
 
         /* Turn the bytes into an AVFrame. */
-        av_image_fill_arrays(
+        struct SwsContext *swsContext = (struct SwsContext *) (intptr_t) ctx;
+        ret = av_image_fill_arrays(
                 dstPicture.data,
                 dstPicture.linesize,
-                dst_, (int) dstFormat, (int) dstW, (int) dstH, 1);
-        ret
-            = sws_scale(
-                    (struct SwsContext *) (intptr_t) ctx,
-                    (const uint8_t * const *) srcPicture->data,
-                    (int *) srcPicture->linesize,
-                    (int) srcSliceY,
-                    (int) srcSliceH,
-                    (uint8_t **) dstPicture.data,
-                    (int *) dstPicture.linesize);
+                dstAligned, (int) dstFormat, (int) dstW, (int) dstH, align);
+        if (ret > 0)
+        {
+            sws_scale(
+                swsContext,
+                (const uint8_t *const *) srcPicture->data,
+                srcPicture->linesize,
+                (int) srcSliceY,
+                (int) srcSliceH,
+                dstPicture.data,
+                dstPicture.linesize);
+            ret = (int) (dstAligned - dst_);
+        }
         (*env)->ReleasePrimitiveArrayCritical(env, dst, dst_, 0);
     }
     else
@@ -1034,7 +1047,7 @@ Java_org_jitsi_impl_neomedia_codec_FFmpeg_sws_1scale__JLjava_lang_Object_2IIIIIL
         av_image_fill_arrays(
                 srcPicture.data,
                 srcPicture.linesize,
-                src_, (int) srcFormat, (int) srcW, (int) srcH, 1);
+                src_, (int) srcFormat, (int) srcW, (int) srcH, 64);
         ret
             = Java_org_jitsi_impl_neomedia_codec_FFmpeg_sws_1scale__JJIILjava_lang_Object_2III(
                     env,
