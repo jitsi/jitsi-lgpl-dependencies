@@ -38,7 +38,7 @@ Description: Submodule of libjitsi for LGPL dependencies (Java part)
  Java-only part of the package.
 
 Package: libjitsi-lgpl-dependencies-jni
-Architecture: i386 amd64
+Architecture: i386 amd64 arm64 ppc64el
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Submodule of libjitsi for LGPL dependencies (JNI part)
  This is an optional submodule of libjitsi that encapsulates references to
