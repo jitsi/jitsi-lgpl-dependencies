@@ -18,6 +18,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       deb_version: ${{ steps.version.outputs.deb_version }}
       create_tag: ${{ steps.version.outputs.create_tag }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -189,7 +190,7 @@ jobs:
           GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"
         run: |
           pbuilder_args=()
-          if [[ "${{ matrix.dist.dist }}" != "$(lsb_release -c -s)" || "${{ matrix.arch }}" != "amd64" ]]; then
+          if [[ "${{ matrix.arch }}" != "amd64" ]]; then
             pbuilder_args+=(--binary-arch)
           fi;
           cat <(echo -e "${{ secrets.GPG_KEY }}") | gpg --batch --import
