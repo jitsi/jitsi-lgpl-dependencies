@@ -1,6 +1,6 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/jitsi/jitsi-lgpl-dependencies/badge.svg)](https://search.maven.org/artifact/jitsi/jitsi-lgpl-dependencies)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jitsi/jitsi-lgpl-dependencies/badge.svg)](https://search.maven.org/artifact/jitsi/jitsi-lgpl-dependencies)
 [![Hosted By: Cloudsmith](https://img.shields.io/badge/Debian%20package%20hosting%20by-cloudsmith-blue?logo=cloudsmith)](https://cloudsmith.com)
-[![Javadocs](http://javadoc.io/badge/jitsi/jitsi-lgpl-dependencies.svg)](http://javadoc.io/doc/jitsi/jitsi-lgpl-dependencies)
+[![Javadocs](https://javadoc.io/badge/org.jitsi/jitsi-lgpl-dependencies.svg)](https://javadoc.io/doc/jitsi/jitsi-lgpl-dependencies)
 
 # jitsi-lgpl-dependencies
 This is a submodule of [libjitsi](https://github.com/jitsi/libjitsi) that

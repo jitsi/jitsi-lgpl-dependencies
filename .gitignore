@@ -6,6 +6,7 @@
 /target
 *.class
 *.swp
+*.iml
 /.settings
 .classpath
 .project

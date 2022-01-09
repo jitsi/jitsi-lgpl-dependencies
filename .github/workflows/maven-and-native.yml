@@ -25,10 +25,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
+          distribution: temurin
 
+      # don't use the setup-java cache option as this only caches what is
+      # necessary for the version, not the other jobs
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
@@ -60,11 +63,7 @@ jobs:
           else
             echo "Not on master"
             echo "::set-output name=create_tag::false"
-            BRANCH=${GITHUB_REF#refs/heads/}
-            VERSION=${MVNVER/-SNAPSHOT/}
-            VERSION=${VERSION/-$BRANCH/}
-            # this may well be what it was before...
-            VERSION=$VERSION-$BRANCH-SNAPSHOT
+            VERSION=${MVNVER}
             DEB_VERSION=${VERSION//-/.}$(date -u +%s%3N)
           fi
           echo "Version: $VERSION"
@@ -77,24 +76,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 8, 11 ]
+        java: [ 8, 11, 17 ]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
-
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          distribution: temurin
+          cache: maven
 
       - name: Build and test with Maven
         run: mvn -B verify -DperformRelease=true
@@ -105,16 +98,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        dist:
+          - { vendor: ubuntu, dist: bionic }
+          - { vendor: ubuntu, dist: focal }
+          - { vendor: ubuntu, dist: hirsute }
+          - { vendor: ubuntu, dist: impish }
+          - { vendor: ubuntu, dist: jammy }
+          - { vendor: debian, dist: buster }
+          - { vendor: debian, dist: bullseye }
+        arch:
+          - amd64
+          - arm64
+          # pbuilder fails on ca-certificates-java
+          #- ppc64el
         include: [
-          { vendor: ubuntu, dist: bionic, arch: i386 },
-          { vendor: ubuntu, dist: bionic, arch: amd64 },
-          { vendor: ubuntu, dist: focal, arch: amd64 },
-          { vendor: ubuntu, dist: groovy, arch: amd64 },
-          { vendor: debian, dist: buster, arch: i386 },
-          { vendor: debian, dist: buster, arch: amd64 },
+          { dist: { vendor: ubuntu, dist: bionic }, arch: i386 },
+          { dist: { vendor: debian, dist: buster }, arch: i386 },
+          { dist: { vendor: debian, dist: bullseye }, arch: i386 },
         ]
 
-    name: ${{ matrix.dist }} ${{ matrix.arch }}
+    name: ${{ matrix.dist.dist }} ${{ matrix.arch }}
+
+    env:
+      UBUNTUTOOLS_UBUNTU_MIRROR: http://azure.archive.ubuntu.com/ubuntu
+      UBUNTUTOOLS_DEBIAN_MIRROR: http://deb.debian.org/debian
 
     steps:
       - name: Checkout
@@ -122,19 +129,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
       - name: Install Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
-          java-package: jdk
+          distribution: temurin
+          cache: maven
 
       - name: Set Maven package version
         run: |
@@ -145,30 +145,53 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y binutils ubuntu-dev-tools pbuilder debootstrap debian-archive-keyring git-buildpackage
+          # dev-tools from backports because https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1916633
+          sudo apt-get install -y \
+            ubuntu-dev-tools/$(lsb_release -c -s)-backports \
+            python3-ubuntutools/$(lsb_release -c -s)-backports \
+            binutils \
+            pbuilder \
+            debootstrap \
+            debian-archive-keyring \
+            git-buildpackage
+
+      - name: Install additional dev packages
+        if: ${{ matrix.arch == 'arm64' || matrix.arch == 'ppc64el' }}
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # https://bugs.launchpad.net/ubuntu/+source/qemu/+bug/1895456
+          # https://gitlab.com/qemu-project/qemu/-/issues/588
+          sudo add-apt-repository ppa:canonical-server/server-backports
+          sudo apt-get update -y
+          sudo apt-get install -y qemu-user-static
+          # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=904336 and https://bugs.launchpad.net/qemu/+bug/1594394
+          echo PBUILDERSATISFYDEPENDSCMD=/usr/lib/pbuilder/pbuilder-satisfydepends-apt >> ~/.pbuilderrc
 
       - name: Cache pbuilder archive
         uses: actions/cache@v2
         id: deb_cache
         with:
-          path: ~/pbuilder/${{ matrix.dist }}*-base.tgz
-          key: pbuilder-${{ matrix.dist }}-${{ matrix.arch }}
+          path: ~/pbuilder/${{ matrix.dist.dist }}*-base.tgz
+          key: pbuilder-${{ matrix.dist.dist }}-${{ matrix.arch }}
 
       - name: Create or update pbuilder base
         id: pbuilder_create
         run: |
-          if [[ "${{ steps.deb_cache.outputs.cache-hit }}" != "true" ]]; then
-            pbuilder-dist ${{ matrix.dist }} ${{ matrix.arch }} create
+          if [ "${{ steps.deb_cache.outputs.cache-hit }}" != "true" ]; then
+            pbuilder-dist ${{ matrix.dist.dist }} ${{ matrix.arch }} create
           else
-            pbuilder-dist ${{ matrix.dist }} ${{ matrix.arch }} update
+            pbuilder-dist ${{ matrix.dist.dist }} ${{ matrix.arch }} update
           fi;
 
       - name: Build deb archive
         env:
-          UBUNTUTOOLS_UBUNTU_MIRROR: http://azure.archive.ubuntu.com/ubuntu
-          UBUNTUTOOLS_DEBIAN_MIRROR: http://debian-archive.trafficmanager.net/debian/
           GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"
         run: |
+          pbuilder_args=()
+          if [[ "${{ matrix.dist.dist }}" != "$(lsb_release -c -s)" || "${{ matrix.arch }}" != "amd64" ]]; then
+            pbuilder_args+=(--binary-arch)
+          fi;
           cat <(echo -e "${{ secrets.GPG_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
           SINCE=$(git describe --match "v[0-9\.]*" --abbrev=0)
@@ -177,24 +200,24 @@ jobs:
             --since $SINCE \
             --meta \
             --release \
-            --distribution=${{ matrix.dist }} \
+            --distribution=${{ matrix.dist.dist }} \
             --force-distribution \
             --spawn-editor=never \
-            --new-version=${{ needs.version.outputs.deb_version }}~${{ matrix.dist }}
+            --new-version=${{ needs.version.outputs.deb_version }}~${{ matrix.dist.dist }}
           dpkg-source -I.git -b .
-          pbuilder-dist ${{ matrix.dist }} ${{ matrix.arch }} build \
+          pbuilder-dist ${{ matrix.dist.dist }} ${{ matrix.arch }} build \
             --source-only-changes \
-            --debbuildopts --buildinfo-option="-O" \
-            --buildresult ~/pbuilder/${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}_result \
+            ${pbuilder_args[@]} \
+            --buildresult ~/pbuilder/${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}_result \
             ../jitsi-lgpl-dependencies_*.dsc
-          cd ~/pbuilder/${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}_result
-          debsign -S -edev@jitsi.org *_source.changes --re-sign -p${{ github.workspace }}/.github/workflows/gpg-wrap.sh
+          cd ~/pbuilder/${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}_result
+          debsign -S -edev+maven@jitsi.org *_source.changes --re-sign -p${{ github.workspace }}/.github/workflows/gpg-wrap.sh
 
       - name: Upload package as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}
-          path: ~/pbuilder/${{ matrix.vendor }}-${{ matrix.dist }}-${{ matrix.arch }}_result/*
+          name: ${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}
+          path: ~/pbuilder/${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}_result/*
 
   windows:
     name: Windows ${{ matrix.arch}} Natives
@@ -222,21 +245,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
       - name: Install Java
         id: install_java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
-          java-package: jdk
           architecture: ${{ matrix.arch }}
+          distribution: temurin
+          cache: maven
 
       - name: Compile Java for JNI headers
         run: mvn -B compile
@@ -275,20 +291,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
       - name: Install Java
         id: install_java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
-          java-package: jdk
+          distribution: temurin
+          cache: maven
 
       - name: Compile Java for JNI headers
         run: mvn -B compile
@@ -315,20 +324,14 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
           server-id: ossrh
           server-username: SONATYPE_USER
           server-password: SONATYPE_PW
-
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
 
       - name: Set version and prepare packages
         id: version
