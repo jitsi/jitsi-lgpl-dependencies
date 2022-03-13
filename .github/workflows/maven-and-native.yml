@@ -146,20 +146,6 @@ jobs:
           name: javah
           path: target/native
 
-      - name: Cache sbuild chroot stanza
-        uses: actions/cache@v2
-        id: sbuild_cache_stanza
-        with:
-          path: /etc/schroot/chroot.d/**
-          key: sbuild-stanza-${{ matrix.dist.dist }}-${{ matrix.arch }}
-
-      - name: Cache sbuild chroot
-        uses: actions/cache@v2
-        id: sbuild_cache_chroot
-        with:
-          path: /var/lib/schroot/chroots/**
-          key: sbuild-chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}
-
       - name: Import GPG key
         env:
           GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"
@@ -346,17 +332,17 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "target/*.jar,target/debian/**"
+          artifacts: "target/*.jar,target/debian/**/*"
           draft: true
           prerelease: true
-          tag: ${{ needs.version.outputs.tag_name }}
+          tag: r${{ needs.version.outputs.version }}
           omitBody: true
           removeArtifacts: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
           artifactErrorsFailBuild: true
 
-      - name: Push packages to ppa and Cloudsmith
+      - name: Push packages to repo
         run: |
           sudo apt-get -y install dput-ng
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
