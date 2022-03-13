@@ -2,9 +2,11 @@ name: Java and Natives
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches:
+    - master
+    - arch
+  #pull_request:
+  #  branches: [ master ]
 
 env:
   # Java version to use for the release
