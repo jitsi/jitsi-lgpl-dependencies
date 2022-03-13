@@ -2,13 +2,15 @@ name: Java and Natives
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    - master
+    - arch
   pull_request:
     branches: [ master ]
 
 env:
   # Java version to use for the release
-  RELEASE_JAVA_VERSION: 8
+  RELEASE_JAVA_VERSION: 11
 
 jobs:
   version:
@@ -16,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      deb_version: ${{ steps.version.outputs.deb_version }}
       create_tag: ${{ steps.version.outputs.create_tag }}
       tag_name: ${{ steps.version.outputs.tag_name }}
     steps:
@@ -37,15 +38,15 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-version-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-maven-version-
 
       - name: Parse and set version
         id: version
         run: |
           MVNVER=`mvn help:evaluate -Dexpression=project.version -q -DforceStdout`
-          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          if [ "${{ github.ref }}" == "refs/heads/arch" ]; then
             TAG_NAME="v${MVNVER/-SNAPSHOT/}"
             if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1
             then
@@ -60,16 +61,13 @@ jobs:
             fi
             VERSION=`git describe --match "v[0-9\.]*" --long --always`
             VERSION=${VERSION:1}
-            DEB_VERSION=${VERSION//-/.}
           else
             echo "Not on master"
             echo "::set-output name=create_tag::false"
             VERSION=${MVNVER}
-            DEB_VERSION=${VERSION//-/.}$(date -u +%s%3N)
           fi
           echo "Version: $VERSION"
           echo "::set-output name=version::${VERSION}"
-          echo "::set-output name=deb_version::${DEB_VERSION}"
           echo "::set-output name=tag_name::${TAG_NAME}"
 
   javatest:
@@ -77,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 8, 11, 17 ]
+        java: [ 11, 17 ]
 
     steps:
       - name: Checkout
@@ -93,6 +91,12 @@ jobs:
       - name: Build and test with Maven
         run: mvn -B verify -DperformRelease=true
 
+      - name: Upload JNI headers
+        uses: actions/upload-artifact@v2
+        with:
+          name: javah
+          path: target/native
+
   deb:
     runs-on: ubuntu-latest
     needs: [ version, javatest ]
@@ -100,29 +104,27 @@ jobs:
       fail-fast: false
       matrix:
         dist:
-          - { vendor: ubuntu, dist: bionic }
+          #- { vendor: ubuntu, dist: bionic }
           - { vendor: ubuntu, dist: focal }
-          - { vendor: ubuntu, dist: hirsute }
-          - { vendor: ubuntu, dist: impish }
-          - { vendor: ubuntu, dist: jammy }
-          - { vendor: debian, dist: buster }
+#          - { vendor: ubuntu, dist: impish }
+#          - { vendor: ubuntu, dist: jammy }
           - { vendor: debian, dist: bullseye }
         arch:
           - amd64
           - arm64
-          # pbuilder fails on ca-certificates-java
-          #- ppc64el
-        include: [
-          { dist: { vendor: ubuntu, dist: bionic }, arch: i386 },
-          { dist: { vendor: debian, dist: buster }, arch: i386 },
-          { dist: { vendor: debian, dist: bullseye }, arch: i386 },
-        ]
+#          - ppc64el
+#        include: [
+#          { dist: { vendor: ubuntu, dist: bionic }, arch: i386 },
+#          { dist: { vendor: debian, dist: buster }, arch: i386 },
+#          { dist: { vendor: debian, dist: bullseye }, arch: i386 },
+#        ]
 
     name: ${{ matrix.dist.dist }} ${{ matrix.arch }}
 
     env:
       UBUNTUTOOLS_UBUNTU_MIRROR: http://azure.archive.ubuntu.com/ubuntu
       UBUNTUTOOLS_DEBIAN_MIRROR: http://deb.debian.org/debian
+      DEBIAN_FRONTEND: noninteractive
 
     steps:
       - name: Checkout
@@ -137,97 +139,58 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Set Maven package version
-        run: |
-          mvn -B versions:set -DnewVersion=${{ needs.version.outputs.version }} -DgenerateBackupPoms=false
-
-      - name: Install dev packages
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo apt-get update -y
-          # dev-tools from backports because https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1916633
-          sudo apt-get install -y \
-            ubuntu-dev-tools/$(lsb_release -c -s)-backports \
-            python3-ubuntutools/$(lsb_release -c -s)-backports \
-            binutils \
-            pbuilder \
-            debootstrap \
-            debian-archive-keyring \
-            git-buildpackage
-
-      - name: Install additional dev packages
-        if: ${{ matrix.arch == 'arm64' || matrix.arch == 'ppc64el' }}
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          # https://bugs.launchpad.net/ubuntu/+source/qemu/+bug/1895456
-          # https://gitlab.com/qemu-project/qemu/-/issues/588
-          sudo add-apt-repository ppa:canonical-server/server-backports
-          sudo apt-get update -y
-          sudo apt-get install -y qemu-user-static
-          # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=904336 and https://bugs.launchpad.net/qemu/+bug/1594394
-          echo PBUILDERSATISFYDEPENDSCMD=/usr/lib/pbuilder/pbuilder-satisfydepends-apt >> ~/.pbuilderrc
-
-      - name: Cache pbuilder archive
-        uses: actions/cache@v2
-        id: deb_cache
+      - name: Get JNI headers
+        uses: actions/download-artifact@v2
         with:
-          path: ~/pbuilder/${{ matrix.dist.dist }}*-base.tgz
-          key: pbuilder-${{ matrix.dist.dist }}-${{ matrix.arch }}
+          name: javah
+          path: target/native
 
-      - name: Create or update pbuilder base
-        id: pbuilder_create
-        run: |
-          if [ "${{ steps.deb_cache.outputs.cache-hit }}" != "true" ]; then
-            pbuilder-dist ${{ matrix.dist.dist }} ${{ matrix.arch }} create
-          else
-            pbuilder-dist ${{ matrix.dist.dist }} ${{ matrix.arch }} update
-          fi;
+      - name: Cache sbuild chroot stanza
+        uses: actions/cache@v2
+        id: sbuild_cache_stanza
+        with:
+          path: /etc/schroot/chroot.d/**
+          key: sbuild-stanza-${{ matrix.dist.dist }}-${{ matrix.arch }}
 
-      - name: Build deb archive
+      - name: Cache sbuild chroot
+        uses: actions/cache@v2
+        id: sbuild_cache_chroot
+        with:
+          path: /var/lib/schroot/chroots/**
+          key: sbuild-chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}
+
+      - name: Import GPG key
         env:
           GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"
         run: |
-          pbuilder_args=()
-          if [[ "${{ matrix.arch }}" != "amd64" ]]; then
-            pbuilder_args+=(--binary-arch)
-          fi;
           cat <(echo -e "${{ secrets.GPG_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
-          SINCE=$(git describe --match "v[0-9\.]*" --abbrev=0)
-          gbp dch \
-            --ignore-branch \
-            --since $SINCE \
-            --meta \
-            --release \
-            --distribution=${{ matrix.dist.dist }} \
-            --force-distribution \
-            --spawn-editor=never \
-            --new-version=${{ needs.version.outputs.deb_version }}~${{ matrix.dist.dist }}
-          dpkg-source -I.git -b .
-          pbuilder-dist ${{ matrix.dist.dist }} ${{ matrix.arch }} build \
-            --source-only-changes \
-            ${pbuilder_args[@]} \
-            --buildresult ~/pbuilder/${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}_result \
-            ../jitsi-lgpl-dependencies_*.dsc
-          cd ~/pbuilder/${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}_result
-          debsign -S -edev+maven@jitsi.org *_source.changes --re-sign -p${{ github.workspace }}/.github/workflows/gpg-wrap.sh
 
-      - name: Upload package as artifact
+      - name: Install tools
+        run: resources/deb-prepare.sh
+
+      - name: Build deb package
+        run: |
+          resources/build-deb.sh \
+            "${{ needs.version.outputs.version }}" \
+            "${{ matrix.dist.dist }}" \
+            "${{ matrix.arch }}"
+
+      - name: Upload packages as artifact
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}
-          path: ~/pbuilder/${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}_result/*
+          path: target/debian/${{ matrix.dist.dist }}/*
 
   windows:
+    if: github.ref == 'refs/heads/xxx'
     name: Windows ${{ matrix.arch}} Natives
     runs-on: windows-latest
     needs: javatest
     strategy:
       fail-fast: false
       matrix:
-        arch: [ x86, x64 ]
+        arch: [ x64 ]
     steps:
       - name: Expand architecture
         id: expand_arch
@@ -286,6 +249,7 @@ jobs:
           path: src/main/resources/win32-${{ steps.expand_arch.outputs.jitsi_arch }}/*
 
   mac:
+    if: github.ref == 'refs/heads/xxx'
     runs-on: macos-latest
     needs: javatest
     steps:
@@ -317,8 +281,9 @@ jobs:
           path: src/main/resources/darwin/*
 
   release:
-    if: github.ref == 'refs/heads/master'
-    needs: [ version, deb, windows, mac ]
+    if: github.ref == 'refs/heads/arch'
+    #needs: [ version, deb, windows, mac ]
+    needs: [ version, deb ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -334,22 +299,6 @@ jobs:
           server-username: SONATYPE_USER
           server-password: SONATYPE_PW
 
-      - name: Set version and prepare packages
-        id: version
-        run: |
-          sudo -H pip3 install --upgrade setuptools
-          sudo -H pip3 install --upgrade wheel
-          sudo -H pip3 install --upgrade cloudsmith-cli
-          sudo apt-get -y install dput
-          if [ "${{ needs.version.outputs.create_tag }}" == "true" ]; then
-            echo "Creating tag $TAG_NAME"
-            git config --local user.name "$GITHUB_ACTOR via GitHub Action"
-            git config --local user.email "action@github.com"
-            git tag -a "${{ needs.version.outputs.tag_name }}" -m "Tagged automatically by GitHub Action ${{ github.workflow }}"
-            git push origin "${{ needs.version.outputs.tag_name }}"
-          fi;
-          mvn -B versions:set -DnewVersion=${{ needs.version.outputs.version }} -DgenerateBackupPoms=false
-
       - name: Download binaries
         uses: actions/download-artifact@v2
         with:
@@ -362,10 +311,11 @@ jobs:
           mkdir -p $BASEDIR
           cd target
           for dist in */ ; do
-              mkdir $BASEDIR/$dist
               if [[ "$dist" =~ ^win32 ]]; then
+                  mkdir $BASEDIR/$dist
                   cp $dist/*.dll $BASEDIR/$dist
               elif [[ "$dist" =~ darwin ]]; then
+                  mkdir $BASEDIR/$dist
                   cp $dist/*.dylib $BASEDIR/$dist
               fi;
           done;
@@ -377,6 +327,7 @@ jobs:
         run: |
           cat <(echo -e "${{ secrets.GPG_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
+          mvn -B versions:set -DnewVersion=${{ needs.version.outputs.version }} -DgenerateBackupPoms=false
           mvn \
             --no-transfer-progress \
             --batch-mode \
@@ -385,31 +336,26 @@ jobs:
             -DperformRelease=true \
             -Drelease=true \
             -DskipTests \
-            deploy
+            verify
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "target/*.jar,target/debian/**"
+          draft: true
+          prerelease: true
+          tag: ${{ needs.version.outputs.tag_name }}
+          omitBody: true
+          removeArtifacts: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifactErrorsFailBuild: true
 
       - name: Push packages to ppa and Cloudsmith
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         run: |
-          REPO_NAME="jitsi-desktop-snapshots"
-          #if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-          #  REPO_NAME="jitsi-desktop"
-          #fi;
-          cd target
-          for dist in */ ; do
-            if [[ "$dist" =~ ^(debian|ubuntu)- ]]; then
-              IFS='-' read -r -a triplet <<< "${dist/\//}"
-              # source only upload to ppa
-              if [[ "${triplet[0]}" == "ubuntu" && "${triplet[2]}" == "amd64" ]]; then
-                echo "Upload ${dist}*_source.changes to ppa:jitsi/$REPO_NAME"
-                dput ppa:jitsi/$REPO_NAME ${dist}*_source.changes
-              fi;
-              # upload all architecture-specific binaries to cloudsmith, but only one java-all
-              echo "Upload ${dist}libjitsi-lgpl-dependencies-jni_*.deb to Cloudsmith"
-              cloudsmith push deb jitsi/$REPO_NAME/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-jni_*.deb
-              if [[ "${triplet[2]}" == "amd64" ]]; then
-                echo "Upload ${dist}libjitsi-lgpl-dependencies-java_*.deb to Cloudsmith"
-                cloudsmith push deb jitsi/$REPO_NAME/${triplet[0]}/${triplet[1]} ${dist}libjitsi-lgpl-dependencies-java_*.deb
-              fi;
-            fi;
+          sudo apt-get -y install dput-ng
+          ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
+          echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
+          for dist in target/debian/* ; do
+            dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-unstable ${dist}/*.changes
           done;
