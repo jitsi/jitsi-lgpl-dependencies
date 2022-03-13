@@ -10,5 +10,6 @@ sudo apt-get install -y \
   python3-ubuntutools/$(lsb_release -c -s)-backports \
   debian-archive-keyring \
   git-buildpackage \
-  rename
+  rename \
+  distro-info
 sudo adduser $USER sbuild

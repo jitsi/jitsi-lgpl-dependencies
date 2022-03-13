@@ -25,9 +25,9 @@ if [[ "${ARCH}" != "amd64" ]]; then
   sbuild -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 else
   sbuild -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  cp "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_* "$BUILD_DIR"
 fi
 
-cp "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_* "$BUILD_DIR"
 debsign -S -edev+maven@jitsi.org "${BUILD_DIR}"/*.changes --re-sign -p"${PROJECT_DIR}"/resources/gpg-wrap.sh
 
 #make build files readable for Windows and archivable for GitHub Actions

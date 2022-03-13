@@ -187,8 +187,8 @@ jobs:
 
       - name: Archive chroot for cache
         run: |
-          sudo tar -cpf chroot.tar /etc/schroot/chroot.d/ /var/lib/schroot/chroots/
-          sudo chown runner:runner chroot.tar
+          sudo tar -cpf ~/chroot.tar /etc/schroot/chroot.d/ /var/lib/schroot/chroots/
+          sudo chown runner:runner ~/chroot.tar
 
   windows:
     if: github.ref == 'refs/heads/xxx'
