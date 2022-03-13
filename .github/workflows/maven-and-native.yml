@@ -170,9 +170,9 @@ jobs:
 
       - name: Build deb package
         shell: /usr/bin/sg sbuild -c "/usr/bin/bash -e {0}"
+        env:
+          GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"
         run: |
-          groups
-          printenv
           resources/deb-build.sh \
             "${{ needs.version.outputs.version }}" \
             "${{ matrix.dist.dist }}" \
