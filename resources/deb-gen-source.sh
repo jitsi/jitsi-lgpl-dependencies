@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 cd "$(realpath "$(dirname "$0")/../")"
 VERSION=$1
 DIST=$2
@@ -27,3 +28,4 @@ gbp dch \
   --new-version="${FULL_VERSION}"
 dpkg-source -I.git -I.target -b .
 dpkg-genchanges -S > ../jitsi-lgpl-dependencies_"${FULL_VERSION}"_source.changes
+cat ../jitsi-lgpl-dependencies_"${FULL_VERSION}"_source.changes

@@ -169,6 +169,7 @@ jobs:
         run: resources/deb-prepare.sh
 
       - name: Build deb package
+        # the user executing sbuild needs to be in the group sbuild, a relogin is not possible here
         shell: /usr/bin/sg sbuild -c "/usr/bin/bash -e {0}"
         env:
           GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"

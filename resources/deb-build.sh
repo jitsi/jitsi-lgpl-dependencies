@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 VERSION=$1
 DIST=$2
 ARCH=$3
@@ -24,6 +25,11 @@ else
   sbuild -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 fi
 
+cp "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_* "$BUILD_DIR"
 debsign -S -edev+maven@jitsi.org "${BUILD_DIR}"/*.changes --re-sign -p"${PROJECT_DIR}"/resources/gpg-wrap.sh
-cp "${PROJECT_DIR}"/../*.dsc "$BUILD_DIR"
-cp "${PROJECT_DIR}"/../*.tar.* "$BUILD_DIR"
+
+#make build files readable for Windows and archivable for GitHub Actions
+for file in "$BUILD_DIR"/*.build
+do
+  mv "$file" "${file//:/-}"
+done

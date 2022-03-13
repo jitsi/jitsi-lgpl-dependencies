@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 sudo apt-get update -y
 sudo apt-get install -y \
   debhelper \
