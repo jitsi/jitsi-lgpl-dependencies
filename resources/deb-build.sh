@@ -29,7 +29,4 @@ cp "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_* "$BUILD_DIR"
 debsign -S -edev+maven@jitsi.org "${BUILD_DIR}"/*.changes --re-sign -p"${PROJECT_DIR}"/resources/gpg-wrap.sh
 
 #make build files readable for Windows and archivable for GitHub Actions
-for file in "$BUILD_DIR"/*.build
-do
-  mv "$file" "${file//:/-}"
-done
+rename 's|:|-|g' "$BUILD_DIR"/*.build

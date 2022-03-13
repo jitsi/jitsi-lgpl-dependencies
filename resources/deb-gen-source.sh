@@ -27,5 +27,10 @@ gbp dch \
   --spawn-editor=never \
   --new-version="${FULL_VERSION}"
 dpkg-source -I.git -I.target -b .
+
+# Manually create the changes file instead of using sbuild --source-only-changes
+# as sbuild would include _amd64.buildinfo in the source.changes. This confuses
+# mini-dinstall because the buildinfo file is also referenced in _amd64.changes,
+# so either of the two files fail to install.
 dpkg-genchanges -S > ../jitsi-lgpl-dependencies_"${FULL_VERSION}"_source.changes
 cat ../jitsi-lgpl-dependencies_"${FULL_VERSION}"_source.changes
