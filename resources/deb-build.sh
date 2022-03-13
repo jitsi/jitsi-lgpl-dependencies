@@ -8,21 +8,12 @@ cd "${PROJECT_DIR}" || exit
 BUILD_DIR=${PROJECT_DIR}/target/debian/${DIST}
 mkdir -p "${BUILD_DIR}"
 
-sudo apt-get update -y
-sudo apt-get install -y \
-  debhelper \
-  sbuild \
-  schroot \
-  ubuntu-dev-tools/$(lsb_release -c -s)-backports \
-  debian-archive-keyring \
-  git-buildpackage
-
 # https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1964670
 sudo sed -i s/pkg-config-\$target_tuple//g /usr/bin/mk-sbuild
 if [[ "${ARCH}" != "amd64" ]]; then
-  mk-sbuild "${DIST}" --target "${ARCH}" || sudo sbuild-update -udc "${DIST}"-amd64-"${ARCH}"
+  mk-sbuild "${DIST}" --target "${ARCH}" || sbuild-update -udc "${DIST}"-amd64-"${ARCH}"
 else
-  mk-sbuild "${DIST}" || sudo sbuild-update -udc "${DIST}"-amd64
+  mk-sbuild "${DIST}" || sbuild-update -udc "${DIST}"-amd64
 fi
 
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
