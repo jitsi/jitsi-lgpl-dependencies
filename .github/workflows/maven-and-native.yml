@@ -169,7 +169,7 @@ jobs:
 
       - name: Build deb package
         run: |
-          resources/build-deb.sh \
+          resources/deb-build.sh \
             "${{ needs.version.outputs.version }}" \
             "${{ matrix.dist.dist }}" \
             "${{ matrix.arch }}"
