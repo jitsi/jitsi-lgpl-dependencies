@@ -20,17 +20,17 @@ sudo apt-get install -y \
 # https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1964670
 sudo sed -i s/pkg-config-\$target_tuple//g /usr/bin/mk-sbuild
 if [[ "${ARCH}" != "amd64" ]]; then
-  sudo mk-sbuild "${DIST}" --target "${ARCH}" || sudo sbuild-update -udc "${DIST}"-amd64-"${ARCH}"
+  mk-sbuild "${DIST}" --target "${ARCH}" || sudo sbuild-update -udc "${DIST}"-amd64-"${ARCH}"
 else
-  sudo mk-sbuild "${DIST}" || sudo sbuild-update -udc "${DIST}"-amd64
+  mk-sbuild "${DIST}" || sudo sbuild-update -udc "${DIST}"-amd64
 fi
 
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
 resources/deb-gen-source.sh "${VERSION}" "${DIST}"
 if [[ "${ARCH}" != "amd64" ]]; then
-  sudo sbuild -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 else
-  sudo sbuild -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --source-only-changes --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 fi
 
 debsign -S -edev+maven@jitsi.org "${BUILD_DIR}"/*.changes --re-sign -p"${PROJECT_DIR}"/resources/gpg-wrap.sh
