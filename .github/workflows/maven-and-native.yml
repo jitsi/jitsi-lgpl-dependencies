@@ -93,7 +93,7 @@ jobs:
 
       - name: Upload JNI headers
         if: matrix.java == env.RELEASE_JAVA_VERSION
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: javah
           path: target/native
@@ -141,7 +141,7 @@ jobs:
           cache: maven
 
       - name: Get JNI headers
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: javah
           path: target/native
@@ -152,6 +152,18 @@ jobs:
         run: |
           cat <(echo -e "${{ secrets.GPG_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
+
+      - name: Cache sbuild chroot stanza
+        uses: actions/cache@v2
+        id: chroot_cache
+        with:
+          path: ~/chroot.tar
+          key: chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}
+
+      - name: Unpack chroot for cache
+        if: steps.chroot_cache.outputs.cache-hit
+        run: |
+          sudo tar -xvpf ~/chroot.tar
 
       - name: Install tools
         run: resources/deb-prepare.sh
@@ -168,10 +180,14 @@ jobs:
             "${{ matrix.arch }}"
 
       - name: Upload packages as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}
           path: target/debian/${{ matrix.dist.dist }}/*
+
+      - name: Archive chroot for cache
+        run: |
+          tar -cvpf ~/chroot.tar /etc/schroot/chroot.d/ /var/lib/schroot/chroots/
 
   windows:
     if: github.ref == 'refs/heads/xxx'
@@ -234,7 +250,7 @@ jobs:
           cmake --build cmake-build-${{ matrix.arch}} --config Release --target install
 
       - name: Upload natives
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: win32-${{ steps.expand_arch.outputs.jitsi_arch }}
           path: src/main/resources/win32-${{ steps.expand_arch.outputs.jitsi_arch }}/*
@@ -266,7 +282,7 @@ jobs:
           cmake --build cmake-build --config Release --target install
 
       - name: Upload natives
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: darwin
           path: src/main/resources/darwin/*
@@ -291,7 +307,7 @@ jobs:
           server-password: SONATYPE_PW
 
       - name: Download binaries
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: target
 
@@ -332,7 +348,7 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "target/*.jar,target/debian/**/*"
+          artifacts: "target/*.jar,target/debian-*/*,target/ubuntu-*/*"
           draft: true
           prerelease: true
           tag: r${{ needs.version.outputs.version }}
