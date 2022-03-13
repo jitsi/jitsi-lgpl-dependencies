@@ -123,8 +123,8 @@ jobs:
     name: ${{ matrix.dist.dist }} ${{ matrix.arch }}
 
     env:
-      #UBUNTUTOOLS_UBUNTU_MIRROR: http://azure.archive.ubuntu.com/ubuntu
-      #UBUNTUTOOLS_DEBIAN_MIRROR: http://deb.debian.org/debian
+      UBUNTUTOOLS_UBUNTU_MIRROR: http://azure.archive.ubuntu.com/ubuntu
+      UBUNTUTOOLS_DEBIAN_MIRROR: http://deb.debian.org/debian
       DEBIAN_FRONTEND: noninteractive
 
     steps:
@@ -163,7 +163,7 @@ jobs:
       - name: Unpack chroot for cache
         if: steps.chroot_cache.outputs.cache-hit
         run: |
-          sudo tar -xvpf ~/chroot.tar
+          sudo tar -xvpf ~/chroot.tar || true
 
       - name: Install tools
         run: resources/deb-prepare.sh
