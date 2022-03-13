@@ -11,18 +11,20 @@ mkdir -p "${BUILD_DIR}"
 
 # https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1964670
 sudo sed -i s/pkg-config-\$target_tuple//g /usr/bin/mk-sbuild
+
+# --skip-security because: https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1955116
 if [[ "${ARCH}" != "amd64" ]]; then
-  mk-sbuild "${DIST}" --target "${ARCH}" || sbuild-update -udc "${DIST}"-amd64-"${ARCH}"
+  mk-sbuild "${DIST}" --target "${ARCH}" --skip-security || sbuild-update -udc "${DIST}"-amd64-"${ARCH}"
 else
-  mk-sbuild "${DIST}" || sbuild-update -udc "${DIST}"-amd64
+  mk-sbuild "${DIST}" --skip-security || sbuild-update -udc "${DIST}"-amd64
 fi
 
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
 resources/deb-gen-source.sh "${VERSION}" "${DIST}"
 if [[ "${ARCH}" != "amd64" ]]; then
-  sbuild -D -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 else
-  sbuild -D -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 fi
 
 cp "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_* "$BUILD_DIR"
