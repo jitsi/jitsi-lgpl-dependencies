@@ -2,9 +2,7 @@ name: Java and Natives
 
 on:
   push:
-    branches:
-    - master
-    - arch
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 

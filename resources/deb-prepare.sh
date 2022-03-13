@@ -6,6 +6,7 @@ sudo apt-get install -y \
   sbuild \
   schroot \
   ubuntu-dev-tools/$(lsb_release -c -s)-backports \
+  python3-ubuntutools/$(lsb_release -c -s)-backports \
   debian-archive-keyring \
   git-buildpackage
 sudo adduser $USER sbuild
