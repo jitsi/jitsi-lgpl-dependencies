@@ -90,6 +90,7 @@ jobs:
         run: mvn -B verify -DperformRelease=true
 
       - name: Upload JNI headers
+        if: matrix.java == env.RELEASE_JAVA_VERSION
         uses: actions/upload-artifact@v2
         with:
           name: javah
@@ -168,7 +169,7 @@ jobs:
         run: resources/deb-prepare.sh
 
       - name: Build deb package
-        shell: /usr/bin/sg sbuild {0}
+        shell: /usr/bin/sg sbuild -c {0}
         run: |
           resources/deb-build.sh \
             "${{ needs.version.outputs.version }}" \
