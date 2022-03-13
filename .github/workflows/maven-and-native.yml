@@ -168,7 +168,7 @@ jobs:
         run: resources/deb-prepare.sh
 
       - name: Build deb package
-        shell: /usr/bin/sg sbuild -c /usr/bin/bash -e {0}
+        shell: /usr/bin/sg sbuild {0}
         run: |
           resources/deb-build.sh \
             "${{ needs.version.outputs.version }}" \
