@@ -362,6 +362,8 @@ jobs:
       - name: Push packages to repo
         run: |
           sudo apt-get -y install dput-ng
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
           echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
           for dist in target/debian/* ; do
