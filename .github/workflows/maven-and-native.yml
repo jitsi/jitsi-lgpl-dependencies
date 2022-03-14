@@ -157,15 +157,20 @@ jobs:
         uses: actions/cache@v2
         id: chroot_cache
         with:
-          path: ~/chroot.tar
-          key: chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}-${{ hashFiles('~/chroot.tar') }}
+          path: target/chroot
+          key: chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}-${{ hashFiles('target/chroot/**') }}
           restore-keys: |
             chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}-
 
-      - name: Unpack chroot for cache
+      - name: Move chroot from cache
         if: steps.chroot_cache.outputs.cache-hit
         run: |
-          sudo tar -xvpf ~/chroot.tar || true
+          sudo mkdir -p /var/lib/schroot/tarballs/
+          sudo mkdir -p /etc/schroot/chroot.d/
+          sudo mv target/chroot/tarballs/* /var/lib/schroot/tarballs/
+          sudo mv target/chroot/config/* /etc/schroot/chroot.d/
+          sudo chown -R root:root /var/lib/schroot/tarballs/
+          sudo chown -R root:root /etc/schroot/chroot.d/
 
       - name: Install tools
         run: resources/deb-prepare.sh
@@ -189,8 +194,10 @@ jobs:
 
       - name: Archive chroot for cache
         run: |
-          sudo tar -cpf ~/chroot.tar /etc/schroot/chroot.d/ /var/lib/schroot/chroots/
-          sudo chown runner:runner ~/chroot.tar
+          mkdir -p target/chroot
+          sudo mv /var/lib/schroot/tarballs/ target/chroot
+          sudo mv /etc/schroot/chroot.d/ target/chroot
+          sudo chown -R runner:runner target/chroot
 
   windows:
     if: github.ref == 'refs/heads/xxx'
