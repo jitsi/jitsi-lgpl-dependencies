@@ -158,7 +158,9 @@ jobs:
         id: chroot_cache
         with:
           path: ~/chroot.tar
-          key: chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}
+          key: chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}-${{ hashFiles('~/chroot.tar') }}
+          restore-keys: |
+            chroot-${{ matrix.dist.dist }}-${{ matrix.arch }}-
 
       - name: Unpack chroot for cache
         if: steps.chroot_cache.outputs.cache-hit
@@ -366,6 +368,6 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
           echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
-          for dist in target/{debian-*,ubuntu-*}/*; do
+          for dist in target/{debian-*,ubuntu-*}/; do
             dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-unstable ${dist}/*.changes
           done;
