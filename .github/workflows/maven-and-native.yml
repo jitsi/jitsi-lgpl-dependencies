@@ -366,6 +366,6 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
           echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
-          for dist in target/debian/* ; do
+          for dist in target/{debian-*,ubuntu-*}/*; do
             dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-unstable ${dist}/*.changes
           done;

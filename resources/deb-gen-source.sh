@@ -5,10 +5,10 @@ cd "$(realpath "$(dirname "$0")/../")"
 VERSION=$1
 DIST=$2
 SINCE=$(git describe --match "v[0-9\.]*" --abbrev=0)
-if debian-distro-info --all | grep -Fqxi "$RELEASE"; then
-    DIST_VERSION=$(debian-distro-info --series="${RELEASE}" -r)
-elif ubuntu-distro-info --all | grep -Fqxi "$RELEASE"; then
-    DIST_VERSION=$(ubuntu-distro-info --series="${RELEASE}" -r)
+if debian-distro-info --all | grep -Fqxi "${DIST}"; then
+    DIST_VERSION=$(debian-distro-info --series="${DIST}" -r)
+elif ubuntu-distro-info --all | grep -Fqxi "${DIST}"; then
+    DIST_VERSION=$(ubuntu-distro-info --series="${DIST}" -r)
     # strip LTS suffix if present
     DIST_VERSION="${DIST_VERSION%%\ *}"
 fi
