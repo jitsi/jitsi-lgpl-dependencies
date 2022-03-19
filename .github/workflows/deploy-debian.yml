@@ -39,7 +39,6 @@ jobs:
           fileName: "debian-releases.tar"
           tarBall: false
           zipBall: false
-          out-file-path: "target"
 
       - name: Unpack all debs
         run: |
