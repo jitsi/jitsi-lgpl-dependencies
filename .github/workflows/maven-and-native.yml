@@ -371,7 +371,7 @@ jobs:
           artifactErrorsFailBuild: true
 
       - name: Tag
-        if: ${{ needs.version.outputs.create_tag }}
+        if: needs.version.outputs.create_tag == 'true'
         run: |
           git config --local user.name "$GITHUB_ACTOR via GitHub Actions"
           git config --local user.email "actions@github.com"
