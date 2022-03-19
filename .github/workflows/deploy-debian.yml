@@ -48,4 +48,6 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
           echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
+          pwd
+          ls -aR
           dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-${{ inputs.release_type }} target/*.changes

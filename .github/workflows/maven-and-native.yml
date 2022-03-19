@@ -323,7 +323,7 @@ jobs:
 
       - name: Copy natives for Maven
         run: |
-          ls -R
+          ls -aR
           BASEDIR=$(pwd)/src/main/resources
           mkdir -p $BASEDIR
           cd target
