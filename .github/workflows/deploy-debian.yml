@@ -36,10 +36,14 @@ jobs:
         with:
           repository: "${{ github.repository }}"
           tag: "${{ inputs.tag }}"
-          fileName: "*"
+          fileName: "debian-releases.tar"
           tarBall: false
           zipBall: false
           out-file-path: "target"
+
+      - name: Unpack all debs
+        run: |
+          tar -xvf debian-releases.tar
 
       - name: Push packages to repo
         run: |
