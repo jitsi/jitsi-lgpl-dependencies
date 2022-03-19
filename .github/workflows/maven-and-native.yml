@@ -367,7 +367,6 @@ jobs:
           prerelease: true
           tag: r${{ needs.version.outputs.version }}
           omitBody: true
-          generateReleaseNotes: true
           removeArtifacts: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
