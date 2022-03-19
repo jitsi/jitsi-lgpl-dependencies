@@ -12,6 +12,9 @@ mkdir -p "${BUILD_DIR}"
 # https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1964670
 sudo sed -i s/pkg-config-\$target_tuple//g /usr/bin/mk-sbuild
 
+# use tmpfs for sbuild
+sudo tee -a /etc/fstab < "${PROJECT_DIR}/resources/sbuild-tmpfs"
+
 # --skip-security because: https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1955116
 if [[ "${ARCH}" != "amd64" ]]; then
   mk-sbuild "${DIST}" --target "${ARCH}" --skip-security --type=file || sbuild-update -udc "${DIST}"-amd64-"${ARCH}"
@@ -20,7 +23,7 @@ else
 fi
 
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
-resources/deb-gen-source.sh "${VERSION}" "${DIST}"
+"${PROJECT_DIR}/resources/deb-gen-source.sh" "${VERSION}" "${DIST}"
 if [[ "${ARCH}" != "amd64" ]]; then
   sbuild -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 else

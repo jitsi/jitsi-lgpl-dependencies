@@ -371,7 +371,7 @@ jobs:
           artifactErrorsFailBuild: true
 
       - name: Deploy Debian packages
-        uses: ./.github/workflows/deploy-debian
+        uses: ./.github/workflows/deploy-debian.yml
         with:
           release_type: unstable
           tag: r${{ needs.version.outputs.version }}
