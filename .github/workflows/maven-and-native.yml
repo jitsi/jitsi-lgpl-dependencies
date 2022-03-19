@@ -390,3 +390,5 @@ jobs:
     with:
       release_type: unstable
       tag: r${{ needs.version.outputs.version }}
+    secrets:
+      APT_DESKTOP_REPO_UPLOAD: ${{ secrets.APT_DESKTOP_REPO_UPLOAD }}
