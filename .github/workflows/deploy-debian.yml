@@ -29,6 +29,9 @@ jobs:
     environment: ${{ inputs.release_type }}
     concurrency: unstable
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - uses: robinraju/release-downloader@4bdb8ee081c9ee08a35320794dd461312ac9e4ad
         with:
           repository: "${{ github.repository }}"
@@ -38,9 +41,6 @@ jobs:
           zipBall: false
           out-file-path: "target"
 
-      - name: Checkout
-        uses: actions/checkout@v2
-
       - name: Push packages to repo
         run: |
           sudo apt-get -y install dput-ng python3-paramiko --no-install-recommends
@@ -48,6 +48,4 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
           echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
-          pwd
-          ls -aR
           dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-${{ inputs.release_type }} target/*.changes
