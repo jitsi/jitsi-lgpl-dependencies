@@ -3,8 +3,8 @@ name: Java and Natives
 on:
   push:
     branches:
-    - master
-    - arch
+      - master
+      - arch
   #pull_request:
   #  branches: [ master ]
 
@@ -107,18 +107,18 @@ jobs:
         dist:
           #- { vendor: ubuntu, dist: bionic }
           - { vendor: ubuntu, dist: focal }
-#          - { vendor: ubuntu, dist: impish }
-#          - { vendor: ubuntu, dist: jammy }
+          #          - { vendor: ubuntu, dist: impish }
+          #          - { vendor: ubuntu, dist: jammy }
           - { vendor: debian, dist: bullseye }
         arch:
           - amd64
           - arm64
-#          - ppc64el
-#        include: [
-#          { dist: { vendor: ubuntu, dist: bionic }, arch: i386 },
-#          { dist: { vendor: debian, dist: buster }, arch: i386 },
-#          { dist: { vendor: debian, dist: bullseye }, arch: i386 },
-#        ]
+    #          - ppc64el
+    #        include: [
+    #          { dist: { vendor: ubuntu, dist: bionic }, arch: i386 },
+    #          { dist: { vendor: debian, dist: buster }, arch: i386 },
+    #          { dist: { vendor: debian, dist: bullseye }, arch: i386 },
+    #        ]
 
     name: ${{ matrix.dist.dist }} ${{ matrix.arch }}
 
@@ -378,7 +378,8 @@ jobs:
           git tag -a "${{ needs.version.outputs.tag_name }}" -m "Tagged automatically by GitHub Actions ${{ github.workflow }}"
           git push origin "${{ needs.version.outputs.tag_name }}"
 
-  - name: Deploy Debian packages
+  deploy:
+    name: Deploy Debian packages
     needs:
       - version
       - release
