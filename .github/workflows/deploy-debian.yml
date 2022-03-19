@@ -38,6 +38,9 @@ jobs:
           zipBall: false
           out-file-path: "target"
 
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Push packages to repo
         run: |
           sudo apt-get -y install dput-ng python3-paramiko --no-install-recommends
@@ -45,6 +48,4 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
           echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
-          for dist in target/{debian-*,ubuntu-*}/; do
-            dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-${{ inputs.release_type }} ${dist}/*.changes
-          done;
+          dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-${{ inputs.release_type }} target/*.changes
