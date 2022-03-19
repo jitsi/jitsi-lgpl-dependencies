@@ -1,0 +1,67 @@
+name: Deploy Debian packages
+
+on:
+  workflow_call:
+    inputs:
+      release_type:
+        description: "The environment to deploy to"
+        type: string
+        required: true
+      tag:
+        description: "Release name to deploy"
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "The environment to deploy to"
+        type: environment
+        required: true
+      tag:
+        description: "Release name to deploy"
+        type: string
+        required: true
+
+jobs:
+  target:
+    runs-on: ubuntu-latest
+    name: Detect environment
+    outputs:
+      release_type: ${{ steps.type.outputs.type }}
+      tag: ${{ steps.type.outputs.tag }}
+    steps:
+      - name: From release or manual call
+        id: type
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "::set-output name=type::${{ on.workflow_dispatch.inputs.release_type }}"
+            echo "::set-output name=tag::${{ on.workflow_dispatch.inputs.tag }}"
+          else
+            echo "::set-output name=type::${{ on.workflow_call.inputs.release_type }}"
+            echo "::set-output name=tag::${{ on.workflow_call.inputs.tag }}"
+          fi
+
+  deploy:
+    name: Deploy to unstable
+    runs-on: ubuntu-latest
+    needs:
+      - target
+    environment: ${{ needs.target.outputs.type }}
+    concurrency: unstable
+    steps:
+      - uses: robinraju/release-downloader@4bdb8ee081c9ee08a35320794dd461312ac9e4ad
+        with:
+          repository: "${{ github.action_repository }}"
+          tag: ${{ needs.target.outputs.tag }}
+          fileName: "target"
+
+      - name: Push packages to repo
+        run: |
+          sudo apt-get -y install dput-ng python3-paramiko --no-install-recommends
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
+          echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
+          for dist in target/{debian-*,ubuntu-*}/; do
+            dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-${{ needs.target.outputs.type }} ${dist}/*.changes
+          done;

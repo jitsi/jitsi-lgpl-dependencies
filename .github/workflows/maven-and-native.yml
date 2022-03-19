@@ -356,25 +356,22 @@ jobs:
             verify
 
       - name: Create release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@40bb172bd05f266cf9ba4ff965cb61e9ee5f6d01
         with:
           artifacts: "target/*.jar,target/debian-*/*,target/ubuntu-*/*"
           draft: true
+          allowUpdates: true
           prerelease: true
           tag: r${{ needs.version.outputs.version }}
           omitBody: true
+          generateReleaseNotes: true
           removeArtifacts: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
           artifactErrorsFailBuild: true
 
-      - name: Push packages to repo
-        run: |
-          sudo apt-get -y install dput-ng
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
-          echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
-          for dist in target/{debian-*,ubuntu-*}/; do
-            dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-unstable ${dist}/*.changes
-          done;
+      - name: Deploy Debian packages
+        uses: ./.github/workflows/deploy-debian
+        with:
+          release_type: unstable
+          tag: r${{ needs.version.outputs.version }}
