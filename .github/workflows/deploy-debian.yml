@@ -24,15 +24,15 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to unstable
+    name: to ${{ inputs.release_type }}
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ inputs.release_type }}
     concurrency: unstable
     steps:
       - uses: robinraju/release-downloader@4bdb8ee081c9ee08a35320794dd461312ac9e4ad
         with:
           repository: "${{ github.repository }}"
-          tag: "${{ github.event.inputs.tag }}"
+          tag: "${{ inputs.tag }}"
           fileName: "*"
           tarBall: false
           zipBall: false
@@ -46,5 +46,5 @@ jobs:
           ssh-keyscan nexus.ingo.ch >> ~/.ssh/known_hosts
           echo "${{ secrets.APT_DESKTOP_REPO_UPLOAD }}" > ~/.ssh/id_rsa
           for dist in target/{debian-*,ubuntu-*}/; do
-            dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-${{ github.event.inputs.environment }} ${dist}/*.changes
+            dput -c resources/dput-jitsi-desktop.cf jitsi-desktop-${{ inputs.release_type }} ${dist}/*.changes
           done;
