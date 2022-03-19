@@ -51,9 +51,9 @@ jobs:
             if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1
             then
               echo "Creating tag $TAG_NAME"
-              git config --local user.name "$GITHUB_ACTOR via GitHub Action"
-              git config --local user.email "action@github.com"
-              git tag -a "$TAG_NAME" -m "Tagged automatically by GitHub Action ${{ github.workflow }}"
+              git config --local user.name "$GITHUB_ACTOR via GitHub Actions"
+              git config --local user.email "actions@github.com"
+              git tag -a "$TAG_NAME" -m "Tagged automatically by GitHub Actions ${{ github.workflow }}"
               echo "::set-output name=create_tag::true"
             else
               echo "Tag: $TAG_NAME already exists"
@@ -370,8 +370,19 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifactErrorsFailBuild: true
 
-      - name: Deploy Debian packages
-        uses: ./.github/workflows/deploy-debian.yml
-        with:
-          release_type: unstable
-          tag: r${{ needs.version.outputs.version }}
+      - name: Tag
+        if: ${{ needs.version.outputs.create_tag }}
+        run: |
+          git config --local user.name "$GITHUB_ACTOR via GitHub Actions"
+          git config --local user.email "actions@github.com"
+          git tag -a "${{ needs.version.outputs.tag_name }}" -m "Tagged automatically by GitHub Actions ${{ github.workflow }}"
+          git push origin "${{ needs.version.outputs.tag_name }}"
+
+  - name: Deploy Debian packages
+    needs:
+      - version
+      - release
+    uses: ./.github/workflows/deploy-debian.yml
+    with:
+      release_type: unstable
+      tag: r${{ needs.version.outputs.version }}
