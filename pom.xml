@@ -187,6 +187,7 @@
                   </archive>
                 </configuration>
               </execution>
+              <!--
               <execution>
                 <id>win32-x86</id>
                 <goals><goal>jar</goal></goals>
@@ -207,21 +208,42 @@
                   </archive>
                 </configuration>
               </execution>
+              -->
               <execution>
-                <id>darwin</id>
+                <id>mac-x86_64</id>
                 <goals><goal>jar</goal></goals>
                 <phase>package</phase>
                 <configuration>
-                  <classifier>darwin</classifier>
+                  <classifier>mac-x86_64</classifier>
                   <includes>
-                    <include>darwin/**</include>
+                    <include>mac-x86_64/**</include>
                   </includes>
                   <archive>
                     <manifestEntries>
                       <Bundle-NativeCode>
-                        darwin/jng722.dylib;
-                        darwin/libjnffmpeg.dylib;
-                        darwin/libjnffmpeg-no-openh264.dylib;osname=Mac OS X;processor=x86-64
+                        mac-x86_64/jng722.dylib;
+                        mac-x86_64/libjnffmpeg.dylib;
+                        mac-x86_64/libjnffmpeg-no-openh264.dylib;osname=Mac OS X;processor=x86-64
+                      </Bundle-NativeCode>
+                    </manifestEntries>
+                  </archive>
+                </configuration>
+              </execution>
+              <execution>
+                <id>mac-arm64</id>
+                <goals><goal>jar</goal></goals>
+                <phase>package</phase>
+                <configuration>
+                  <classifier>mac-arm64</classifier>
+                  <includes>
+                    <include>mac-arm64/**</include>
+                  </includes>
+                  <archive>
+                    <manifestEntries>
+                      <Bundle-NativeCode>
+                        mac-arm64/jng722.dylib;
+                        mac-arm64/libjnffmpeg.dylib;
+                        mac-arm64/libjnffmpeg-no-openh264.dylib;osname=Mac OS X;processor=aarch_64
                       </Bundle-NativeCode>
                     </manifestEntries>
                   </archive>
