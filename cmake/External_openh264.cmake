@@ -7,6 +7,8 @@ if (APPLE)
     set(GNU_SED_INLINE "\"\"")
     if (CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
         set(ARCH "arm64")
+    else()
+        set(ARCH "x86_64")
     endif ()
 else ()
     if (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
@@ -32,5 +34,5 @@ externalproject_add(
         BUILD_COMMAND make -f ${OPENH264_ROOT}/src/openh264/Makefile ARCH=${ARCH} PREFIX=${OPENH264_ROOT}
 
         # install
-        INSTALL_COMMAND make -f ${OPENH264_ROOT}/src/openh264/Makefile PREFIX=${OPENH264_ROOT} install
+        INSTALL_COMMAND make -f ${OPENH264_ROOT}/src/openh264/Makefile ARCH=${ARCH} PREFIX=${OPENH264_ROOT} install
 )

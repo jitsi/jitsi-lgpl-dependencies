@@ -2,6 +2,11 @@ set(LAME_ROOT ${CMAKE_BINARY_DIR}/lame)
 set(libmp3lame_INCLUDE_DIRS ${LAME_ROOT}/include)
 set(libmp3lame_LIBRARY_DIRS ${LAME_ROOT}/lib)
 
+if (APPLE)
+    set(LAME_HOST "--host=${CMAKE_OSX_ARCHITECTURES}-apple-darwin")
+    set(LAME_CFLAGS "-arch ${CMAKE_OSX_ARCHITECTURES}")
+endif ()
+
 externalproject_add(lame
                     # setup
                     PREFIX ${LAME_ROOT}
@@ -13,7 +18,7 @@ externalproject_add(lame
                     TLS_VERIFY true
 
                     # configure
-                    CONFIGURE_COMMAND sh ${LAME_ROOT}/src/lame/configure --prefix=${LAME_ROOT} --disable-shared --disable-debug --enable-static --enable-nasm --disable-analyzer-hooks --disable-decoder --disable-frontend --with-pic
+                    CONFIGURE_COMMAND sh ${LAME_ROOT}/src/lame/configure ${LAME_HOST} --prefix=${LAME_ROOT} --disable-shared --disable-debug --enable-static --enable-nasm --disable-analyzer-hooks --disable-decoder --disable-frontend --with-pic
 
                     # build
                     BUILD_COMMAND make
