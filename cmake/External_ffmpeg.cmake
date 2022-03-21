@@ -19,7 +19,7 @@ function(ext_ffmpeg SUFFIX INC LD ARGS)
         list(APPEND ARGS "--enable-w32threads;--disable-pthreads")
     endif ()
     if (APPLE)
-        list(APPEND ARGS "--arch ${CMAKE_OSX_ARCHITECTURES}")
+        list(APPEND ARGS "--arch=${CMAKE_OSX_ARCHITECTURES}")
     endif ()
 
     if (INC)
