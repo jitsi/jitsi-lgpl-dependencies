@@ -10,7 +10,7 @@ function(join VALUES GLUE OUTPUT)
     set(${OUTPUT} "${_TMP_STR}" PARENT_SCOPE)
 endfunction()
 
-function(ext_ffmpeg SUFFIX INC LD ARGS)
+function(ext_ffmpeg SUFFIX EXTRA_CFLAGS EXTRA_LDFLAGS ARGS)
     set(FFMPEG_ROOT ${CMAKE_BINARY_DIR}/ffmpeg${SUFFIX})
     set(FFMPEG${SUFFIX}_INCLUDE_DIRS ${FFMPEG_ROOT}/include PARENT_SCOPE)
     set(FFMPEG${SUFFIX}_LIBRARY_DIRS ${FFMPEG_ROOT}/lib PARENT_SCOPE)
@@ -19,19 +19,23 @@ function(ext_ffmpeg SUFFIX INC LD ARGS)
         list(APPEND ARGS "--enable-w32threads;--disable-pthreads")
     endif ()
     if (APPLE)
-        list(APPEND ARGS "--arch=${CMAKE_OSX_ARCHITECTURES}")
+        if (CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+            list(APPEND ARGS "--arch=arm64;--enable-cross-compile")
+            list(APPEND EXTRA_CFLAGS "--target=arm64-apple-darwin")
+            list(APPEND EXTRA_LDFLAGS "--target=arm64-apple-darwin")
+        endif ()
     endif ()
 
-    if (INC)
-        list(REMOVE_DUPLICATES INC)
-        string(REPLACE ";" " -I" INC_FLAT "${INC}")
-        set(CFLAGS "--extra-cflags=\"-I${INC_FLAT}\"")
+    if (EXTRA_CFLAGS)
+        list(REMOVE_DUPLICATES EXTRA_CFLAGS)
+        string(REPLACE ";" " " CFLAGS_FLAT "${EXTRA_CFLAGS}")
+        set(CFLAGS "--extra-cflags=\"${CFLAGS_FLAT}\"")
     endif ()
 
-    if (LD)
-        list(REMOVE_DUPLICATES LD)
-        string(REPLACE ";" " -L" LD_FLAT "${LD}")
-        set(LDFLAGS "--extra-ldflags=\"-L${LD_FLAT}\"")
+    if (EXTRA_LDFLAGS)
+        list(REMOVE_DUPLICATES EXTRA_LDFLAGS)
+        string(REPLACE ";" " " LDFLAGS_FLAT "${EXTRA_LDFLAGS}")
+        set(LDFLAGS "--extra-ldflags=\"${LDFLAGS_FLAT}\"")
     endif ()
 
     if (ARGS)
@@ -62,7 +66,7 @@ sed -i -e 's/#define HAVE_NANOSLEEP.*/#define HAVE_NANOSLEEP 0/' ${FFMPEG_ROOT}/
 
                         # download
                         GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg
-                        GIT_TAG a77521cd5d27e955b16e8097eecefc779ffdcb6d #n4.3.3
+                        GIT_TAG 7e0d640edf6c3eee1816b105c2f7498c4f948e74 #n4.4.1
                         TLS_VERIFY true
 
                         # this should be part of the configure command, but calling it with "sh -c" doesn't work on Mac
@@ -81,12 +85,12 @@ sed -i -e 's/#define HAVE_NANOSLEEP.*/#define HAVE_NANOSLEEP 0/' ${FFMPEG_ROOT}/
 endfunction()
 
 # build two variants of FFmpeg: with and without h264 enabled
-list(APPEND extra_includes ${libmp3lame_INCLUDE_DIRS})
-list(APPEND extra_libs ${libmp3lame_LIBRARY_DIRS})
+list(APPEND extra_cflags "-I${libmp3lame_INCLUDE_DIRS}")
+list(APPEND extra_ldflags "-L${libmp3lame_LIBRARY_DIRS}")
 list(APPEND extra_args "--enable-libmp3lame;--enable-encoder=libmp3lame")
-ext_ffmpeg("" "${extra_includes}" "${extra_libs}" "${extra_args}")
+ext_ffmpeg("" "${extra_cflags}" "${extra_ldflags}" "${extra_args}")
 
-list(APPEND extra_includes ${LIBOPENH264_INCLUDE_DIRS})
-list(APPEND extra_libs ${LIBOPENH264_LIBRARY_DIRS})
+list(APPEND extra_cflags "-I${LIBOPENH264_INCLUDE_DIRS}")
+list(APPEND extra_ldflags "-L${LIBOPENH264_LIBRARY_DIRS}")
 list(APPEND extra_args "--enable-parser=h264;--enable-libopenh264;--enable-encoder=libopenh264;--enable-decoder=libopenh264")
-ext_ffmpeg("_OH264" "${extra_includes}" "${extra_libs}" "${extra_args}")
+ext_ffmpeg("_OH264" "${extra_cflags}" "${extra_ldflags}" "${extra_args}")

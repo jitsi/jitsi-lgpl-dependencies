@@ -300,6 +300,9 @@ jobs:
         run: |
           brew install yasm
           brew install nasm
+          curl https://raw.githubusercontent.com/FFmpeg/gas-preprocessor/898e8a7f573e22ada07f8db2b87e97078787db75/gas-preprocessor.pl --output ~/gas-preprocessor.pl
+          chmod +x ~/gas-preprocessor.pl
+          sudo mv ~/gas-preprocessor.pl /usr/local/bin/
           cmake -B cmake-build -DJAVA_HOME=${{ steps.install_java.outputs.path }} -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}
           cmake --build cmake-build --config Release --target install
 
