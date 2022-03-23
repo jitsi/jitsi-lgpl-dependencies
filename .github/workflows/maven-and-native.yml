@@ -103,7 +103,7 @@ jobs:
           path: target/native
 
   deb:
-    runs-on: "${{ matrix.os }}"
+    runs-on: "${{ matrix.dist.os }}"
     needs: [ version, javatest ]
     strategy:
       fail-fast: false
@@ -119,9 +119,9 @@ jobs:
           - arm64
           - ppc64el
         include: [
-          { dist: { vendor: ubuntu, dist: bionic }, arch: i386, os: "ubuntu-18.04" },
-          { dist: { vendor: debian, dist: buster }, arch: i386, os: ubuntu-latest },
-          { dist: { vendor: debian, dist: bullseye }, arch: i386, os: ubuntu-latest },
+          { dist: { vendor: ubuntu, dist: bionic, os: "ubuntu-18.04" }, arch: i386 },
+          { dist: { vendor: debian, dist: buster, os: ubuntu-latest }, arch: i386 },
+          { dist: { vendor: debian, dist: bullseye, os: ubuntu-latest }, arch: i386 },
         ]
 
     name: ${{ matrix.dist.dist }} ${{ matrix.arch }}
