@@ -6,7 +6,7 @@ DIST=$2
 ARCH=$3
 PROJECT_DIR="$(realpath "$(dirname "$0")/../")"
 cd "${PROJECT_DIR}" || exit
-# export instead of "sbuild --build-dir=...", the option was only added in focal
+# export for sbuildrc sourcing
 export BUILD_DIR=${PROJECT_DIR}/target/debian/${DIST}
 mkdir -p "${BUILD_DIR}"
 
@@ -26,10 +26,11 @@ fi
 
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
 "${PROJECT_DIR}/resources/deb-gen-source.sh" "${VERSION}" "${DIST}"
+export SBUILD_CONFIG="${PROJECT_DIR}/resources/sbuildrc"
 if [[ "${ARCH}" != "amd64" ]]; then
-  sbuild -v -b -d "${DIST}" --no-run-lintian --no-apt-update --no-apt-distupgrade --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild --dist "${DIST}" --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 else
-  sbuild -v -b -d "${DIST}" --no-run-lintian --no-apt-update --no-apt-distupgrade --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild --dist "${DIST}" --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
   cp "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_* "$BUILD_DIR"
 fi
 
