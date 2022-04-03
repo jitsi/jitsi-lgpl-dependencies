@@ -6,7 +6,8 @@ DIST=$2
 ARCH=$3
 PROJECT_DIR="$(realpath "$(dirname "$0")/../")"
 cd "${PROJECT_DIR}" || exit
-BUILD_DIR=${PROJECT_DIR}/target/debian/${DIST}
+# export instead of "sbuild --build-dir=...", the option was only added in focal
+export BUILD_DIR=${PROJECT_DIR}/target/debian/${DIST}
 mkdir -p "${BUILD_DIR}"
 
 # https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1964670
@@ -26,9 +27,9 @@ fi
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
 "${PROJECT_DIR}/resources/deb-gen-source.sh" "${VERSION}" "${DIST}"
 if [[ "${ARCH}" != "amd64" ]]; then
-  sbuild -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild -v -b -d "${DIST}" --no-run-lintian --no-apt-update --no-apt-distupgrade --no-arch-all --host "${ARCH}" "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
 else
-  sbuild -v -b -d "${DIST}" --build-dir "${BUILD_DIR}" --no-run-lintian --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
+  sbuild -v -b -d "${DIST}" --no-run-lintian --no-apt-update --no-apt-distupgrade --arch-all "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_*.dsc
   cp "${PROJECT_DIR}"/../jitsi-lgpl-dependencies_* "$BUILD_DIR"
 fi
 

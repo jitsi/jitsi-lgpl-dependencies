@@ -119,6 +119,7 @@ jobs:
           - arm64
           - ppc64el
         include: [
+          # crossbuild-essential-i386 is missing on focal, thus build i386 on bionic
           { dist: { vendor: ubuntu, dist: bionic, os: "ubuntu-18.04" }, arch: i386 },
           { dist: { vendor: debian, dist: buster, os: ubuntu-latest }, arch: i386 },
           { dist: { vendor: debian, dist: bullseye, os: ubuntu-latest }, arch: i386 },
@@ -181,6 +182,7 @@ jobs:
 
       - name: Build deb package
         # the user executing sbuild needs to be in the group sbuild, a relogin is not possible here
+        # bionic doesn't have /bin and /usr/bin merged, thus /bin/bash
         shell: /usr/bin/sg sbuild -c "/bin/bash -e {0}"
         env:
           GPG_PASSPHRASE: "${{ secrets.GPG_PW }}"
