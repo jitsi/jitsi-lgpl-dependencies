@@ -103,26 +103,26 @@ jobs:
           path: target/native
 
   deb:
-    runs-on: "${{ matrix.dist.os }}"
+    runs-on: ubuntu-latest
     needs: [ version, javatest ]
     strategy:
       fail-fast: false
       matrix:
         dist:
-          - { vendor: ubuntu, dist: bionic, os: ubuntu-latest }
-          - { vendor: ubuntu, dist: focal, os: ubuntu-latest }
-          - { vendor: ubuntu, dist: impish, os: ubuntu-latest }
-          - { vendor: ubuntu, dist: jammy, os: ubuntu-latest }
-          - { vendor: debian, dist: bullseye, os: ubuntu-latest }
+          - { vendor: ubuntu, dist: bionic }
+          - { vendor: ubuntu, dist: focal }
+          - { vendor: ubuntu, dist: impish }
+          - { vendor: ubuntu, dist: jammy }
+          - { vendor: debian, dist: bullseye }
         arch:
           - amd64
           - arm64
           - ppc64el
         include: [
-          # crossbuild-essential-i386 is missing on focal, thus build i386 on bionic
-          { dist: { vendor: ubuntu, dist: bionic, os: "ubuntu-18.04" }, arch: i386 },
-          { dist: { vendor: debian, dist: buster, os: ubuntu-latest }, arch: i386 },
-          { dist: { vendor: debian, dist: bullseye, os: ubuntu-latest }, arch: i386 },
+          # crossbuild-essential-i386 is missing on bionic, failing sbuild
+          # { dist: { vendor: ubuntu, dist: bionic }, arch: i386 },
+          { dist: { vendor: debian, dist: buster }, arch: i386 },
+          { dist: { vendor: debian, dist: bullseye }, arch: i386 },
         ]
 
     name: ${{ matrix.dist.dist }} ${{ matrix.arch }}
