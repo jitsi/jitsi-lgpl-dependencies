@@ -113,6 +113,7 @@ jobs:
           - { vendor: ubuntu, dist: focal }
           - { vendor: ubuntu, dist: impish }
           - { vendor: ubuntu, dist: jammy }
+          - { vendor: debian, dist: buster }
           - { vendor: debian, dist: bullseye }
         arch:
           - amd64
@@ -309,14 +310,13 @@ jobs:
           curl https://raw.githubusercontent.com/FFmpeg/gas-preprocessor/898e8a7f573e22ada07f8db2b87e97078787db75/gas-preprocessor.pl --output ~/gas-preprocessor.pl
           chmod +x ~/gas-preprocessor.pl
           sudo mv ~/gas-preprocessor.pl /usr/local/bin/
-          cmake -B cmake-build -DJAVA_HOME=${{ steps.install_java.outputs.path }} -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}
-          cmake --build cmake-build --config Release --target install
+          resources/mac-cmake.sh ${{ steps.install_java.outputs.path }} ${{ matrix.arch }}
 
       - name: Upload natives
         uses: actions/upload-artifact@v3
         with:
-          name: mac-${{ matrix.arch }}
-          path: src/main/resources/mac-${{ matrix.arch }}/*
+          name: darwin-${{ matrix.arch }}
+          path: src/main/resources/darwin-*/*
 
   release:
     if: github.ref == 'refs/heads/arch'
