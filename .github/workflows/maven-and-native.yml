@@ -132,7 +132,8 @@ jobs:
 
     env:
       UBUNTUTOOLS_UBUNTU_MIRROR: http://azure.archive.ubuntu.com/ubuntu
-      UBUNTUTOOLS_DEBIAN_MIRROR: http://deb.debian.org/debian
+      UBUNTUTOOLS_DEBIAN_MIRROR: http://debian-archive.trafficmanager.net/debian/
+      UBUNTUTOOLS_DEBSEC_MIRROR: http://debian-archive.trafficmanager.net/debian-security
       DEBIAN_FRONTEND: noninteractive
 
     steps:
