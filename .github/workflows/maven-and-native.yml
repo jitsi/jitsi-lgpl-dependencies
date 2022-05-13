@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - arch
   #pull_request:
   #  branches: [ master ]
 
@@ -50,7 +49,7 @@ jobs:
         id: version
         run: |
           MVNVER=`mvn help:evaluate -Dexpression=project.version -q -DforceStdout`
-          if [ "$GITHUB_REF" == "refs/heads/arch" ]; then
+          if [ "$GITHUB_REF" == "refs/heads/master" ]; then
             TAG_NAME="v${MVNVER/-SNAPSHOT/}"
             if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1
             then
@@ -322,7 +321,7 @@ jobs:
           path: src/main/resources/darwin-*/*
 
   release:
-    if: github.ref == 'refs/heads/arch'
+    if: github.ref == 'refs/heads/master'
     needs:
       - version
       - deb
@@ -380,7 +379,7 @@ jobs:
             -DperformRelease=true \
             -Drelease=true \
             -DskipTests \
-            verify
+            deploy
 
       - name: Pack all debs to avoid Github filename mangling
         run: |
