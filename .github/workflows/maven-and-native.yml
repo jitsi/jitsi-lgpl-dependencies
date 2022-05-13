@@ -50,7 +50,7 @@ jobs:
         id: version
         run: |
           MVNVER=`mvn help:evaluate -Dexpression=project.version -q -DforceStdout`
-          if [ "${{ github.ref }}" == "refs/heads/arch" ]; then
+          if [ "$GITHUB_REF" == "refs/heads/arch" ]; then
             TAG_NAME="v${MVNVER/-SNAPSHOT/}"
             if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1
             then
