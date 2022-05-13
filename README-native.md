@@ -3,13 +3,13 @@
 
 Library versions
 ----------------
-- FFmpeg 3.4
+- FFmpeg 4.3.3
 - lame 3.100
 - openh264 2.2.1
 
 Prerequisites
 -------------
-All systems: Java 8 or newer, Maven, CMake >= 3.10
+All systems: Java 11 or newer, Maven, CMake >= 3.10
 
 ### Windows
 - Get [MSYS2 64bit distro](http://www.msys2.org/)
@@ -40,9 +40,12 @@ Build libraries
 
 ```
 ./configure \
-    --disable-shared --enable-static \
+    --disable-shared \
+    --enable-static \
     --enable-nasm \
-    --disable-analyzer-hooks --disable-decoder --disable-frontend \
+    --disable-analyzer-hooks \
+    --disable-decoder \
+    --disable-frontend \
     --with-pic
 
 make

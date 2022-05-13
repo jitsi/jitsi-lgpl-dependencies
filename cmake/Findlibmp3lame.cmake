@@ -12,15 +12,15 @@ libfind_pkg_check_modules(libmp3lame_PKGCONF libmp3lame)
 
 # Include dir
 find_path(libmp3lame_INCLUDE_DIR
-        NAMES lame/lame.h
-        PATHS ${libmp3lame_PKGCONF_INCLUDE_DIRS}
-        )
+          NAMES lame/lame.h
+          PATHS ${libmp3lame_PKGCONF_INCLUDE_DIRS}
+          )
 
 # Finally the library itself
 find_library(libmp3lame_LIBRARY
-        NAMES libmp3lame
-        PATHS ${libmp3lame_PKGCONF_LIBRARY_DIRS}
-        )
+             NAMES libmp3lame
+             PATHS ${libmp3lame_PKGCONF_LIBRARY_DIRS}
+             )
 
 # Set the include dir variables and the libraries and let libfind_process do the rest.
 # NOTE: Singular variables for this library, plural for libraries this this lib depends on.
