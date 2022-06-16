@@ -21,7 +21,6 @@ case $ARCH in
 esac
 
 cmake -B cmake-build \
-    -DJITSI_SRTP_LIBSSL_VERSION="$OPENSSL_VERSION" \
     -DJAVA_HOME="$JAVA_HOME" \
     -DCMAKE_INSTALL_PREFIX="src/main/resources/darwin-$INSTALL_PREFIX_ARCH" \
     -DCMAKE_OSX_ARCHITECTURES="$OSX_ARCH"

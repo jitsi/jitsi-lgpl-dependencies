@@ -39,7 +39,7 @@ jobs:
       # don't use the setup-java cache option as this only caches what is
       # necessary for the version, not the other jobs
       - name: Cache local Maven repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-version-${{ hashFiles('**/pom.xml') }}
@@ -162,7 +162,7 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG
 
       - name: Cache sbuild chroot stanza
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: chroot_cache
         with:
           path: target/chroot
@@ -176,7 +176,7 @@ jobs:
           sudo mkdir -p /var/lib/schroot/tarballs/
           sudo mkdir -p /etc/schroot/chroot.d/
           sudo mv target/chroot/tarballs/* /var/lib/schroot/tarballs/
-          sudo mv target/chroot/chroot.d/* /etc/schroot/
+          sudo mv target/chroot/chroot.d/* /etc/schroot/chroot.d/
           sudo chown -R root:root /var/lib/schroot/tarballs/
           sudo chown -R root:root /etc/schroot/chroot.d/
 
@@ -276,7 +276,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: win32-${{ steps.expand_arch.outputs.jitsi_arch }}
-          path: src/main/resources/win32-${{ steps.expand_arch.outputs.jitsi_arch }}/*
+          path: src/main/resources/win32-*/*
 
   mac:
     runs-on: macos-latest
@@ -353,14 +353,12 @@ jobs:
           BASEDIR=$(pwd)/src/main/resources
           mkdir -p $BASEDIR
           cd target
-          for dist in */ ; do
-              if [[ "$dist" =~ ^win32 ]]; then
-                  mkdir $BASEDIR/$dist
-                  cp $dist/*.dll $BASEDIR/$dist
-              elif [[ "$dist" =~ ^mac ]]; then
-                  mkdir $BASEDIR/$dist
-                  cp $dist/*.dylib $BASEDIR/$dist
-              fi;
+          for dist in */*/ ; do
+            last_dir=$(basename $dist)
+            if [[ "$last_dir" =~ ^(darwin|win32) ]]; then
+              mkdir -p "$BASEDIR/$last_dir" || true
+              cp "$dist"/*.{dylib,dll} "$BASEDIR/$last_dir" || true
+            fi;
           done;
 
       - name: Release to Maven Central

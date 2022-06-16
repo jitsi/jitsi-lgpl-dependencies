@@ -2,6 +2,7 @@
 set -e
 set -x
 sudo apt-get update -y
+# dev-tools from backports because https://bugs.launchpad.net/ubuntu/+source/ubuntu-dev-tools/+bug/1916633
 sudo apt-get install -y \
   debhelper \
   sbuild \
