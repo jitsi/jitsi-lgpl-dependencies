@@ -1,8 +1,5 @@
 project(jnffmpeg)
 
-# JNI
-find_package(JNI REQUIRED)
-
 include_directories(
         ../../target/native/javah
         ${JNI_INCLUDE_DIRS}

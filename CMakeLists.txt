@@ -3,6 +3,7 @@ project(jitsi-lgpl-dependencies)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(PkgConfig REQUIRED)
+find_package(JNI REQUIRED)
 
 if (WIN32)
     set(DEFAULT_USE_SYSTEM_FFMPEG OFF)
