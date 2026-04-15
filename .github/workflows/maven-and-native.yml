@@ -26,12 +26,12 @@ jobs:
       tag_name: ${{ steps.version.outputs.tag_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62  # v3
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
           distribution: temurin
@@ -39,7 +39,7 @@ jobs:
       # don't use the setup-java cache option as this only caches what is
       # necessary for the version, not the other jobs
       - name: Cache local Maven repository
-        uses: actions/cache@v3
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c  # v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-version-${{ hashFiles('**/pom.xml') }}
@@ -83,10 +83,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
 
       - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62  # v3
         with:
           java-version: ${{ matrix.java }}
           distribution: temurin
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload JNI headers
         if: matrix.java == env.RELEASE_JAVA_VERSION
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
         with:
           name: javah
           path: target/native
@@ -137,19 +137,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
         with:
           fetch-depth: 0
 
       - name: Install Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62  # v3
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
           distribution: temurin
           cache: maven
 
       - name: Get JNI headers
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
         with:
           name: javah
           path: target/native
@@ -162,7 +162,7 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG
 
       - name: Cache sbuild chroot stanza
-        uses: actions/cache@v3
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c  # v3
         id: chroot_cache
         with:
           path: target/chroot
@@ -196,7 +196,7 @@ jobs:
             "${{ matrix.arch }}"
 
       - name: Upload packages as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
         with:
           name: ${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}
           path: target/debian/${{ matrix.dist.dist }}/*
@@ -234,17 +234,17 @@ jobs:
           fi;
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
 
       - name: Get JNI headers
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
         with:
           name: javah
           path: target/native
 
       - name: Install Java
         id: install_java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62  # v3
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
           architecture: ${{ matrix.arch }}
@@ -252,7 +252,7 @@ jobs:
           cache: maven
 
       - name: Install MSYS2 packages
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@cafece8e6baf9247cf9b1bf95097b0b983cc558d  # v2
         with:
           msystem: ${{ steps.expand_arch.outputs.msystem }}
           install: >-
@@ -273,7 +273,7 @@ jobs:
           cmake --build cmake-build-${{ matrix.arch}} --config Release --target install
 
       - name: Upload natives
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
         with:
           name: win32-${{ steps.expand_arch.outputs.jitsi_arch }}
           path: src/main/resources/win32-*/*
@@ -289,17 +289,17 @@ jobs:
           - arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
 
       - name: Get JNI headers
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
         with:
           name: javah
           path: target/native
 
       - name: Install Java
         id: install_java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62  # v3
         with:
           distribution: zulu
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
@@ -315,7 +315,7 @@ jobs:
           resources/mac-cmake.sh ${{ steps.install_java.outputs.path }} ${{ matrix.arch }}
 
       - name: Upload natives
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
         with:
           name: darwin-${{ matrix.arch }}
           path: src/main/resources/darwin-*/*
@@ -330,10 +330,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62  # v3
         with:
           java-version: ${{ env.RELEASE_JAVA_VERSION }}
           distribution: temurin
@@ -343,7 +343,7 @@ jobs:
           server-password: SONATYPE_PW
 
       - name: Download binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
         with:
           path: target
 
