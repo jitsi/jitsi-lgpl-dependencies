@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload JNI headers
         if: matrix.java == env.RELEASE_JAVA_VERSION
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: javah
           path: target/native
@@ -149,7 +149,7 @@ jobs:
           cache: maven
 
       - name: Get JNI headers
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: javah
           path: target/native
@@ -196,7 +196,7 @@ jobs:
             "${{ matrix.arch }}"
 
       - name: Upload packages as artifact
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: ${{ matrix.dist.vendor }}-${{ matrix.dist.dist }}-${{ matrix.arch }}
           path: target/debian/${{ matrix.dist.dist }}/*
@@ -237,7 +237,7 @@ jobs:
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
 
       - name: Get JNI headers
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: javah
           path: target/native
@@ -273,7 +273,7 @@ jobs:
           cmake --build cmake-build-${{ matrix.arch}} --config Release --target install
 
       - name: Upload natives
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: win32-${{ steps.expand_arch.outputs.jitsi_arch }}
           path: src/main/resources/win32-*/*
@@ -292,7 +292,7 @@ jobs:
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # v3
 
       - name: Get JNI headers
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: javah
           path: target/native
@@ -315,7 +315,7 @@ jobs:
           resources/mac-cmake.sh ${{ steps.install_java.outputs.path }} ${{ matrix.arch }}
 
       - name: Upload natives
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5  # v3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: darwin-${{ matrix.arch }}
           path: src/main/resources/darwin-*/*
@@ -343,7 +343,7 @@ jobs:
           server-password: SONATYPE_PW
 
       - name: Download binaries
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a  # v3
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           path: target
 
